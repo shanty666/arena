@@ -16,7 +16,7 @@
     <div class="tab" data-tab="equip">Экипировка</div>
     <div class="tab" data-tab="forge">🔨 Кузнец</div>
     <div class="tab" data-tab="shop">Магазин</div>
-    <div class="tab" data-tab="leaderboard">🏆 Топ</div>
+    <div class="tab" data-tab="leaderboard">🏆 Топ PvP</div>
   </div>
 
   <div id="home" class="panel">
@@ -49,7 +49,7 @@
         <p style="text-align:center;margin:4px 0 0;">
           <button id="fightBtn" class="hidden" disabled style="font-size:15px;padding:8px 22px;background:#7a5c1e;border-color:#c9a227;">Нанести удар!</button>
           <button id="newEnemyBtn" style="font-size:15px;padding:8px 22px;">Найти противника</button>
-          <button id="duelBtn" class="btn-duel" style="font-size:15px;padding:8px 22px;">⚔ Дуэль</button>
+          <button id="duelBtn" class="btn-duel" style="font-size:15px;padding:8px 22px;">⚔ PvP</button>
         </p>
       </div>
       <div class="fighter-side" id="eSide" title="Нажми для карточки">
@@ -188,6 +188,22 @@
       <button id="createBtn">Создать</button>
       <button onclick="closeCreateModalForce()" style="margin-left:8px;">Отмена</button>
     </p>
+  </div>
+</div>
+<div id="chatOverlay" class="chat-modal hidden" onclick="closeChat(event)">
+  <div class="chat-window" onclick="event.stopPropagation()">
+    <div class="chat-header">
+      <span class="chat-title">💬 Чат</span>
+      <button class="chat-close" onclick="closeChatForce()">&times;</button>
+    </div>
+    <div class="chat-tabs" id="chatTabs"></div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-row">
+      <select id="chatPmSelect" class="hidden"></select>
+      <input type="text" id="chatInput" maxlength="200"
+             placeholder="Написать сообщение..." autocomplete="off">
+      <button onclick="sendChatMessage()">Отправить</button>
+    </div>
   </div>
 </div>
 
@@ -710,6 +726,10 @@ if (player.dailyProgress.heals === undefined) player.dailyProgress.heals = 0;
   if (!player.battleHistory) player.battleHistory = [];
   if (!player.workShift) player.workShift = null;
   if (!player.bossCooldowns) player.bossCooldowns = {};
+  if (player.pvpWins === undefined) player.pvpWins = 0;
+  if (player.pvpLosses === undefined) player.pvpLosses = 0;
+  if (player.pvpRating === undefined) player.pvpRating = 0;
+  if (player.pvpLastFight === undefined) player.pvpLastFight = 0;
   /* Миграция со старого формата: переносим общий кулдаун на замок */
   if (player.bossCooldownUntil !== undefined && player.bossCooldownUntil > 0) {
     if (player.bossCooldowns.castle === undefined || player.bossCooldowns.castle < player.bossCooldownUntil) {
@@ -823,21 +843,11 @@ function claimDailyReward() {
   save(); renderHome();
 }
 
-function checkWorkReset() {
-  if (Date.now() >= player.workResetTime) {
-    player.workDayCount = { short: 0, medium: 0, long: 0 };
-    player.workResetTime = Date.now() + 2 * 24 * 3600 * 1000;
-    save();
-  }
-}
 function startWork(type) {
   if (player.workShift) { alert("У тебя уже активна смена! Дождись её окончания."); return; }
-  var limits = { short: 2, medium: 1, long: 1 };
-  if (player.workDayCount[type] >= limits[type]) { alert("Лимит смен этого типа исчерпан! Жди сброса через 2 дня."); return; }
   var hours = type === "short" ? 4 : (type === "medium" ? 6 : 8);
   player.workShift = type;
   player.workEndTime = Date.now() + hours * 3600 * 1000;
-  player.workDayCount[type]++;
   addLog("💼 <span class='heal'>Ты отправился на работу! Смена: " + hours + " часов.</span>", "heal");
   save(); renderHome();
 }
@@ -885,7 +895,10 @@ function timeoutSkip() {
     addLog("😵 <span class='heal'>Враг оглушён! Он тоже пропускает ход!</span>", "heal");
   } else {
     tryEnemySkill();
-    if (enemy && enemy.hp > 0) strike(enemy, player, randomZone(), []);
+    if (enemy && enemy.hp > 0) {
+      combatState.punishNextHit = PVP_PUNISH_MULT;
+      strike(enemy, player, randomZone(), []);
+    }
   }
   if (player.hp <= 0) { defeat(); return; }
   renderBattleScreen();
@@ -896,7 +909,6 @@ function timeoutSkip() {
 setInterval(function() {
   if (!player) return;
   checkDailyReset();
-  checkWorkReset();
   tickHpRegen();
   tickFatigue();
   if (currentTab === "home") renderHome();
@@ -1393,7 +1405,7 @@ function renderBattleScreen() {
   if (enemy) {
     eSide.className = "fighter-side active" + (isDuel ? " duel" : "") + (enemy.isElite ? " elite" : "") + (enemy.isBoss ? " boss" : "");
     var headerBadges = "";
-    if (isDuel) headerBadges += "<span class='duel-badge'>⚔ ДУЭЛЬ</span> ";
+    if (isDuel) headerBadges += "<span class='duel-badge'>⚔ PVP</span> ";
     if (enemy.isBoss) headerBadges += "<span class='boss-badge'>👑 БОСС</span> ";
     if (enemy.isElite) headerBadges += "<span class='elite-badge'>⭐ ЭЛИТА</span> ";
     document.getElementById("eHeader").innerHTML = (headerBadges ? headerBadges + "<br>" : "") + "<span style='color:#e07020'>" + esc(enemy.name) + "</span> [" + player.level + "] <span class='hp-num'>(" + Math.max(0, enemy.hp) + "/" + enemy.maxHp + ")</span>";
@@ -1491,7 +1503,6 @@ function renderSkillPanel() {
 
 function renderHome() {
   checkDailyReset();
-  checkWorkReset();
   var isMax = player.level >= MAX_LEVEL;
   var base = XP_TABLE[player.level][player.ap];
   var next = nextThreshold();
@@ -1561,7 +1572,6 @@ function renderWorkSection() {
   var timeLeft = getWorkTimeLeft();
   var isWorking = player.workShift !== null;
   var isReady = isWorking && timeLeft <= 0;
-  var limits = { short: 2, medium: 1, long: 1 };
   var shiftNames = { short: "4 часа", medium: "6 часов", long: "8 часов" };
   var shiftRewards = { short: "10-20", medium: "25-40", long: "40-60" };
   var html = "<div class='work-panel'><h3>💼 Работа (пассивный доход)</h3>";
@@ -1574,16 +1584,13 @@ function renderWorkSection() {
       html += "<div class='work-timer'>⏳ Осталось: " + formatWorkTime(timeLeft) + "</div>";
     }
   } else {
-    html += "<div class='reset-info'>Выбери смену. Лимит за 2 дня: короткая ×2, средняя ×1, длинная ×1.</div>";
+    html += "<div class='reset-info'>Выбери смену. После завершения можно снова идти на любую.</div>";
     html += "<div style='margin-top:10px;'>";
     ["short", "medium", "long"].forEach(function(type) {
-      var available = player.workDayCount[type] < limits[type];
-      html += "<button class='work-shift-btn' onclick='startWork(\"" + type + "\")' " + (available ? "" : "disabled") + ">" + shiftNames[type] + " (" + shiftRewards[type] + " монет) — осталось: " + (limits[type] - player.workDayCount[type]) + "</button>";
+      html += "<button class='work-shift-btn' onclick='startWork(\"" + type + "\")'>" + shiftNames[type] + " (" + shiftRewards[type] + " монет)</button>";
     });
     html += "</div>";
   }
-  var resetTime = Math.max(0, player.workResetTime - Date.now());
-  html += "<div class='reset-info' style='margin-top:10px;font-size:11px;'>Сброс лимитов через: " + formatWorkTime(resetTime) + "</div>";
   html += "</div>";
   section.innerHTML = html;
 }
@@ -2207,6 +2214,48 @@ function makeDuelEnemy() {
     dmgMin: Math.max(1, Math.round(wr.min * DUEL_STAT_MULT)), dmgMax: Math.max(2, Math.round(wr.max * DUEL_STAT_MULT))
   };
 }
+/* === PVP-ПРОТИВНИК === */
+var PVP_NAMES = [
+  "Тень_Арены", "Мечник77", "Кровавый_Лорд", "Гладиатор_X", "Ночной_Клинок",
+  "Стальной_Волк", "Хитрый_Лис", "Бешеный_Топор", "Странник_Дорог",
+  "Охотник_Теней", "Ветеран_Битв", "Молодой_Лев", "Седой_Волк", "Ловчий"
+];
+
+function makePvPEnemy() {
+  var eb = getEquipBonus();
+  var playerLevel = player.level;
+
+  // Соперник: либо наш уровень, либо +1
+  var rollHigher = Math.random() < 0.5 && playerLevel < MAX_LEVEL;
+  var oppLevel = rollHigher ? playerLevel + 1 : playerLevel;
+
+  // Статы соперника — почти как у игрока, с небольшим разбросом
+  var statMult = 0.95 + Math.random() * 0.15; // 0.95 – 1.10
+  var dStr = Math.max(1, Math.floor((player.str + eb.str) * statMult));
+  var dAgi = Math.max(1, Math.floor((player.agi + eb.agi) * statMult));
+  var dIntu = Math.max(1, Math.floor((player.intu + eb.intu) * statMult));
+  var dEnd = Math.max(1, Math.floor((player.end + eb.end) * statMult));
+
+  // HP = как у игрока + 0-15% разброс
+  var hpMult = 1.0 + Math.random() * 0.15;
+  var dHp = Math.floor((20 + dEnd * 6) * hpMult);
+
+  // Оружие бота — ТАКОЕ ЖЕ по урону, как у игрока
+  var wr = getWeaponRange(player);
+  var dmgMin = wr.min;
+  var dmgMax = wr.max;
+
+  var name = PVP_NAMES[Math.floor(Math.random() * PVP_NAMES.length)] + " [" + oppLevel + "]";
+
+  return {
+    name: name,
+    level: oppLevel,
+    isHigherLevel: oppLevel > playerLevel,
+    str: dStr, agi: dAgi, intu: dIntu, end: dEnd,
+    maxHp: dHp, hp: dHp,
+    dmgMin: dmgMin, dmgMax: dmgMax
+  };
+}
 function pickBossEquipment(archId) {
   var prefer = ARCHETYPE_PREFERRED_STAT[archId];
   var eq = {};
@@ -2331,17 +2380,66 @@ document.getElementById("newEnemyBtn").onclick = function() {
 };
 document.getElementById("duelBtn").onclick = function() {
   if (!player) return;
-  if (currentLocation !== "arena") { alert("Дуэль доступна только на Арене!"); return; }
-  if (player.level < DUEL_MIN_LEVEL) { alert("Дуэль доступна с " + DUEL_MIN_LEVEL + " уровня!"); return; }
+  if (enemy) return;
   if (player.hp <= 0) { player.hp = Math.max(1, Math.floor(player.maxHp * 0.3)); save(); }
-  enemy = makeDuelEnemy(); isDuel = true; combatState = { dodgeBoost: 0 };
+
+  // кулдаун
+  var cd = (player.pvpLastFight || 0) + PVP_COOLDOWN_MS - Date.now();
+  if (cd > 0) {
+    var sec = Math.ceil(cd / 1000);
+    alert("Кулдаун PvP: ещё " + sec + " сек.");
+    return;
+  }
+
+  // показать оверлей поиска
+  document.getElementById("pvpSearchOverlay").classList.remove("hidden");
+  document.getElementById("pvpSearchStatus").textContent = "Сканируем арену...";
+
+  // через 2-5 сек — нашли соперника
+  var searchTime = PVP_SEARCH_MIN_MS + Math.random() * (PVP_SEARCH_MAX_MS - PVP_SEARCH_MIN_MS);
+  setTimeout(function() {
+    if (document.getElementById("pvpSearchOverlay").classList.contains("hidden")) return; // отменили
+
+    enemy = makePvPEnemy();
+    var status = document.getElementById("pvpSearchStatus");
+
+    if (enemy.isHigherLevel) {
+      // нужен согласие соперника (симуляция)
+      status.textContent = "Соперник " + enemy.name + " обдумывает бой...";
+      setTimeout(function() {
+        if (document.getElementById("pvpSearchOverlay").classList.contains("hidden")) return;
+        status.textContent = "Соперник согласился!";
+        setTimeout(startPvPFight, 500);
+      }, PVP_CONSENT_DELAY_MS);
+    } else {
+      // равный уровень — сразу в бой
+      status.textContent = "Найден соперник: " + enemy.name;
+      setTimeout(startPvPFight, 500);
+    }
+  }, searchTime);
+};
+
+function startPvPFight() {
+  document.getElementById("pvpSearchOverlay").classList.add("hidden");
+  if (!enemy) return;
+  isDuel = true;
+  combatState = { dodgeBoost: 0, punishNextHit: 1 };
   initSkillState(); skillState.selectedSkill = null;
   startBattleLog();
   resetTurnDeadline();
-  addLog("<span class='duel-log'>⚔ ДУЭЛЬ! " + fighterName(enemy) + " (статы ×" + DUEL_STAT_MULT + ", с навыками). Награда ×" + DUEL_REWARD_MULT + "!</span>", "sys");
+  addLog("<span class='duel-log'>⚔ PVP! " + fighterName(enemy) + " (уровень " + enemy.level + "). Награда ×" + PVP_REWARD_MULT + "!</span>", "sys");
   attackZone = null; blockZones = [];
   renderBattleScreen();
-};
+}
+
+function cancelPvpSearch(e) {
+  if (e && e.target !== document.getElementById("pvpSearchOverlay")) return;
+  cancelPvpSearchForce();
+}
+function cancelPvpSearchForce() {
+  document.getElementById("pvpSearchOverlay").classList.add("hidden");
+  enemy = null;
+}
 document.getElementById("fightBtn").onclick = function() {
   if (!enemy || enemy.hp <= 0 || player.hp <= 0) return;
   battleRounds++;
@@ -2533,6 +2631,13 @@ function strike(att, def, zone, blocks) {
     if (za > 0) dmg = Math.max(1, dmg - za);
   }
 
+    /* Штраф за пропуск хода */
+  if (combatState && combatState.punishNextHit && combatState.punishNextHit !== 1) {
+    dmg = Math.floor(dmg * combatState.punishNextHit);
+    addLog("<span class='dmg'>⚡ Штраф за пропуск хода: +20% урона!</span>", "sys");
+    combatState.punishNextHit = 1;
+  }
+
   def.hp -= dmg;
   if (blocks.indexOf(zone) < 0) combatState.dodgeBoost = 0;
 }
@@ -2550,6 +2655,11 @@ function victory() {
   }
   if (isDuel) {
     player.dailyProgress.duelWins = (player.dailyProgress.duelWins || 0) + 1;
+    player.pvpWins = (player.pvpWins || 0) + 1;
+    var ratingDelta = (enemy && enemy.isHigherLevel) ? PVP_RATING_WIN_HIGHER : PVP_RATING_WIN_EQUAL;
+    player.pvpRating = (player.pvpRating || 0) + ratingDelta;
+    player.pvpLastFight = Date.now();
+    addLog("<span class='epic'>🏆 PvP: победа! Рейтинг +" + ratingDelta + " (всего: " + player.pvpRating + ")</span>", "heal");
   }
   var dropLocations = ["forest", "caves", "graveyard"];
   if (!isDuel && enemy && enemy.location && dropLocations.indexOf(enemy.location) >= 0) {
@@ -2574,7 +2684,7 @@ function victory() {
   player.fatigue = Math.min(FATIGUE_MAX, player.fatigue + FATIGUE_PER_FIGHT);
   player.lastFatigueTick = Date.now();
     var gold = getBattleGold();
-  if (isDuel) gold = Math.floor(gold * DUEL_REWARD_MULT);
+  if (isDuel) gold = Math.floor(gold * PVP_REWARD_MULT);
   if (enemy && enemy.isElite) gold = Math.floor(gold * ELITE_GOLD_MULT);
   var fl = getFatigueLevel();
   gold = Math.max(1, Math.floor(gold * fl.goldMult));
@@ -2631,7 +2741,7 @@ function victory() {
   }
   if (player.level < MAX_LEVEL) {
     var gain = getXpForBot(player.level);
-    if (isDuel) gain = Math.floor(gain * DUEL_REWARD_MULT);
+    if (isDuel) gain = Math.floor(gain * PVP_REWARD_MULT);
     if (enemy && enemy.isElite) gain = Math.floor(gain * ELITE_XP_MULT);
     gain = Math.floor(gain * fl.expMult);
     player.exp += gain;
@@ -2649,6 +2759,14 @@ function defeat() {
   player.losses++;
   player.dailyProgress.streak = 0;
   player.hp = Math.max(1, Math.floor(player.maxHp * 0.3));
+
+  if (isDuel) {
+    player.pvpLosses = (player.pvpLosses || 0) + 1;
+    player.pvpRating = Math.max(0, (player.pvpRating || 0) + PVP_RATING_LOSS);
+    player.pvpLastFight = Date.now();
+    addLog("<span class='epic'>🏆 PvP: поражение. Рейтинг " + PVP_RATING_LOSS + " (всего: " + player.pvpRating + ")</span>", "sys");
+  }
+
   enemy = null; isDuel = false; skillState = null; combatState = { dodgeBoost: 0 };
   player.lastHpRegen = Date.now();
   renderBattleScreen(); save(); renderHome();
@@ -2667,29 +2785,345 @@ function addLog(html, cls) {
   log.scrollTop = log.scrollHeight;
 }
 
-var FAKE_LEADERS = [
-  { name: "Хальдор Железнобокий", level: 13, wins: 48720 },
-  { name: "Элара Клинковая", level: 12, wins: 35100 },
-  { name: "Мороз Беспощадный", level: 12, wins: 28400 },
-  { name: "Валькирия Шторм", level: 11, wins: 21300 },
-  { name: "Торн Кровавый", level: 10, wins: 16800 },
-  { name: "Лира Теневая", level: 9, wins: 12400 },
-  { name: "Гром Камнерукий", level: 8, wins: 8900 },
-  { name: "Сайрус Молниеносный", level: 7, wins: 6200 },
-  { name: "Нара Ядовитая", level: 6, wins: 4100 }
+var FAKE_PVP_LEADERS = [
+  { name: "Хальдор Железнобокий", level: 13, pvpWins: 842, pvpLosses: 156, pvpRating: 4230 },
+  { name: "Элара Клинковая", level: 12, pvpWins: 715, pvpLosses: 189, pvpRating: 3810 },
+  { name: "Мороз Беспощадный", level: 12, pvpWins: 634, pvpLosses: 210, pvpRating: 3540 },
+  { name: "Валькирия Шторм", level: 11, pvpWins: 521, pvpLosses: 187, pvpRating: 3120 },
+  { name: "Торн Кровавый", level: 10, pvpWins: 448, pvpLosses: 165, pvpRating: 2780 },
+  { name: "Лира Теневая", level: 9, pvpWins: 362, pvpLosses: 142, pvpRating: 2410 },
+  { name: "Гром Камнерукий", level: 8, pvpWins: 287, pvpLosses: 118, pvpRating: 2050 },
+  { name: "Сайрус Молниеносный", level: 7, pvpWins: 214, pvpLosses: 96, pvpRating: 1720 },
+  { name: "Нара Ядовитая", level: 6, pvpWins: 156, pvpLosses: 74, pvpRating: 1340 },
+  { name: "Клинок_Ночи", level: 5, pvpWins: 98, pvpLosses: 61, pvpRating: 980 },
+  { name: "Серый_Волк", level: 4, pvpWins: 62, pvpLosses: 40, pvpRating: 640 },
+  { name: "Молодой_Лев", level: 3, pvpWins: 31, pvpLosses: 22, pvpRating: 380 }
 ];
+
 function renderLeaderboard() {
-  var all = FAKE_LEADERS.slice();
-  all.push({ name: player.name, level: player.level, wins: player.wins, isMe: true });
-  all.sort(function(a, b) { if (b.level !== a.level) return b.level - a.level; return b.wins - a.wins; });
+  var all = FAKE_PVP_LEADERS.slice();
+  all.push({
+    name: player.name,
+    level: player.level,
+    pvpWins: player.pvpWins || 0,
+    pvpLosses: player.pvpLosses || 0,
+    pvpRating: player.pvpRating || 0,
+    isMe: true
+  });
+
+  // Сортировка: сначала по рейтингу, потом по победам
+  all.sort(function(a, b) {
+    if (b.pvpRating !== a.pvpRating) return b.pvpRating - a.pvpRating;
+    return b.pvpWins - a.pvpWins;
+  });
+
   var html = "";
   all.slice(0, 15).forEach(function(p, i) {
     var rank = i + 1;
     var medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
-    html += "<div class='leaderboard-row" + (p.isMe ? " me" : "") + "'><div><span class='leaderboard-rank'>" + medal + "</span> <b>" + esc(p.name) + "</b></div><div>Ур. " + p.level + " | " + p.wins.toLocaleString() + " побед</div></div>";
+    var total = p.pvpWins + p.pvpLosses;
+    var wr = total > 0 ? Math.round(p.pvpWins / total * 100) : 0;
+    html += "<div class='leaderboard-row" + (p.isMe ? " me" : "") + "'>" +
+      "<div>" +
+        "<span class='leaderboard-rank'>" + medal + "</span> " +
+        "<b>" + esc(p.name) + "</b>" +
+        "<div class='lb-pvp-sub'>Ур. " + p.level + " · " + wr + "% побед</div>" +
+      "</div>" +
+      "<div style='text-align:right;'>" +
+        "<div class='lb-rating'>⚔ " + p.pvpRating.toLocaleString() + "</div>" +
+        "<div class='lb-pvp-sub'>" + p.pvpWins + " / " + p.pvpLosses + "</div>" +
+      "</div>" +
+    "</div>";
   });
   document.getElementById("leaderboardList").innerHTML = html;
 }
+/* === ЧАТ === */
+var CHAT_STORAGE_KEY = "arena_chat";
+var CHAT_MAX_MESSAGES = 200;
+var CHAT_ACTIVE_TAB = "general";
+var CHAT_OPEN = false;
+var CHAT_FAKE_TIMER = null;
+
+var CHAT_NPC_NAMES = ["Гром", "Лира", "Тень_Арены", "Мечник77", "Странник", "Капитан_Стражи", "Пилигрим", "Охотник"];
+
+var CHAT_GENERAL_PHRASES = [
+  "Кто сегодня в замок? Нужен напарник",
+  "Продам секиру +3, недорого",
+  "Как апнуть 5 уровень быстро?",
+  "Король сегодня лёг с 4-го раза...",
+  "У кого есть свиток заточки +3?",
+  "На арене сегодня мясо",
+  "В пещерах хороший дроп",
+  "Кто-нибудь видел Директора?",
+  "Заточка +4 вообще возможна?",
+  "Собрал полный сет, иду в замок"
+];
+
+var CHAT_PM_PHRASES = [
+  "Привет! Не хочешь помочь с боссом?",
+  "Скинь скрин своей экипировки",
+  "У тебя есть лишний T3?",
+  "Давай в дуэль?",
+  "Какой у тебя билд?",
+  "Помоги с квестом в лесу, плз"
+];
+
+var CHAT_SYSTEM_PHRASES = [
+  "🎉 Игрок {name} достиг 10-го уровня!",
+  "⚔ Игрок {name} победил Короля Замка!",
+  "💎 Игрок {name} нашёл легендарный остаток!",
+  "🏆 Игрок {name} возглавил таблицу лидеров!",
+  "🔥 Игрок {name} заточил оружие до +5!"
+];
+
+function chatLoad() {
+  try {
+    var raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return [];
+    var data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (e) { return []; }
+}
+
+function chatSave(msgs) {
+  try {
+    if (msgs.length > CHAT_MAX_MESSAGES) {
+      msgs = msgs.slice(-CHAT_MAX_MESSAGES);
+    }
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+  } catch (e) {}
+}
+
+function chatAdd(channel, from, text, opts) {
+  opts = opts || {};
+  var msgs = chatLoad();
+  var msg = {
+    id: Date.now() + Math.random(),
+    channel: channel,
+    from: from,
+    to: opts.to || null,
+    text: text,
+    ts: Date.now(),
+    read: CHAT_OPEN && CHAT_ACTIVE_TAB === channel
+  };
+  msgs.push(msg);
+  chatSave(msgs);
+  if (CHAT_OPEN) chatRenderMessages();
+  chatRenderMinibar();
+  chatRenderTabs();
+}
+
+function chatRenderMinibar() {
+  var msgs = chatLoad();
+  var badge = document.getElementById("chatMinibarBadge");
+  var preview = document.getElementById("chatMinibarPreview");
+  if (!badge || !preview) return;
+
+  var unread = msgs.filter(function(m) { return !m.read; }).length;
+  if (unread > 0) {
+    badge.textContent = unread > 99 ? "99+" : unread;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+
+  if (msgs.length === 0) {
+    preview.textContent = "Чат — нажми, чтобы открыть";
+    return;
+  }
+  var last = msgs[msgs.length - 1];
+  var author = last.from === player.name ? "Ты" : esc(last.from);
+  preview.innerHTML = "<span class='chat-author'>" + author + ":</span> " + esc(last.text);
+}
+
+function chatRenderTabs() {
+  var box = document.getElementById("chatTabs");
+  if (!box) return;
+  var msgs = chatLoad();
+  var tabs = [
+    { id: "general", label: "Общий" },
+    { id: "system", label: "Система" },
+    { id: "pm", label: "Личные" }
+  ];
+  var html = "";
+  tabs.forEach(function(t) {
+    var unread = msgs.filter(function(m) { return m.channel === t.id && !m.read; }).length;
+    var active = CHAT_ACTIVE_TAB === t.id;
+    html += "<div class='chat-tab" + (active ? " active" : "") + "' onclick='switchChatTab(\"" + t.id + "\")'>" +
+      t.label +
+      (unread > 0 ? " <span class='chat-badge'>" + unread + "</span>" : "") +
+      "</div>";
+  });
+  box.innerHTML = html;
+}
+
+function chatRenderMessages() {
+  var box = document.getElementById("chatMessages");
+  if (!box) return;
+  var msgs = chatLoad();
+  var filtered = msgs.filter(function(m) {
+    if (CHAT_ACTIVE_TAB === "pm") return m.channel === "pm";
+    return m.channel === CHAT_ACTIVE_TAB;
+  });
+
+  if (filtered.length === 0) {
+    box.innerHTML = "<div class='chat-empty'>Пока пусто</div>";
+    return;
+  }
+
+  var html = "";
+  filtered.forEach(function(m) {
+    var time = new Date(m.ts);
+    var hh = time.getHours(), mm = time.getMinutes();
+    var tstr = (hh < 10 ? "0" + hh : hh) + ":" + (mm < 10 ? "0" + mm : mm);
+    var isMe = m.from === player.name;
+    var cls = "chat-message";
+    if (m.channel === "system") cls += " system";
+    if (m.channel === "pm") cls += " pm";
+    var author = isMe ? "Ты" : esc(m.from);
+    var prefix = (m.channel === "pm" && m.to) ? ("→ " + esc(m.to) + ": ") : "";
+    html += "<div class='" + cls + "'>" +
+      "<span class='cm-author" + (isMe ? " me" : "") + "'>" + author + "</span>" +
+      "<span class='cm-time'>" + tstr + "</span> " +
+      "<span class='cm-text'>" + prefix + esc(m.text) + "</span>" +
+      "</div>";
+  });
+  box.innerHTML = html;
+  box.scrollTop = box.scrollHeight;
+}
+
+function switchChatTab(tab) {
+  CHAT_ACTIVE_TAB = tab;
+  // помечаем как прочитанные
+  var msgs = chatLoad();
+  var changed = false;
+  msgs.forEach(function(m) {
+    if (m.channel === tab && !m.read) { m.read = true; changed = true; }
+  });
+  if (changed) chatSave(msgs);
+
+  // показать/скрыть select получателя в ЛС
+  var sel = document.getElementById("chatPmSelect");
+  if (sel) {
+    if (tab === "pm") {
+      sel.classList.remove("hidden");
+      if (sel.options.length === 0) {
+        CHAT_NPC_NAMES.forEach(function(n) {
+          var opt = document.createElement("option");
+          opt.value = n;
+          opt.textContent = "→ " + n;
+          sel.appendChild(opt);
+        });
+      }
+    } else {
+      sel.classList.add("hidden");
+    }
+  }
+
+  chatRenderTabs();
+  chatRenderMessages();
+  chatRenderMinibar();
+}
+
+function openChat() {
+  CHAT_OPEN = true;
+  document.getElementById("chatOverlay").classList.remove("hidden");
+  // помечаем текущий канал как прочитанный
+  switchChatTab(CHAT_ACTIVE_TAB);
+  setTimeout(function() {
+    var input = document.getElementById("chatInput");
+    if (input) input.focus();
+  }, 50);
+}
+
+function closeChat(e) {
+  if (e && e.target !== document.getElementById("chatOverlay")) return;
+  closeChatForce();
+}
+
+function closeChatForce() {
+  CHAT_OPEN = false;
+  document.getElementById("chatOverlay").classList.add("hidden");
+}
+
+function sendChatMessage() {
+  var input = document.getElementById("chatInput");
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) return;
+
+  if (CHAT_ACTIVE_TAB === "pm") {
+    var sel = document.getElementById("chatPmSelect");
+    var to = sel && sel.value ? sel.value : CHAT_NPC_NAMES[0];
+    chatAdd("pm", player.name, text, { to: to });
+    // имитация ответа через 3-6 сек
+    setTimeout(function() {
+      chatAdd("pm", to, CHAT_PM_PHRASES[Math.floor(Math.random() * CHAT_PM_PHRASES.length)]);
+    }, 3000 + Math.random() * 3000);
+  } else if (CHAT_ACTIVE_TAB === "general") {
+    chatAdd("general", player.name, text);
+  } else {
+    // в системном канале писать нельзя
+    return;
+  }
+
+  input.value = "";
+  input.focus();
+}
+
+function startFakeChat() {
+  if (CHAT_FAKE_TIMER) clearInterval(CHAT_FAKE_TIMER);
+  function scheduleNext() {
+    var delay = 30000 + Math.random() * 30000; // 30-60 сек
+    CHAT_FAKE_TIMER = setTimeout(function() {
+      var roll = Math.random();
+      if (roll < 0.75) {
+        // общий чат
+        var name = CHAT_NPC_NAMES[Math.floor(Math.random() * CHAT_NPC_NAMES.length)];
+        var phrase = CHAT_GENERAL_PHRASES[Math.floor(Math.random() * CHAT_GENERAL_PHRASES.length)];
+        chatAdd("general", name, phrase);
+      } else if (roll < 0.92) {
+        // системное событие
+        var pname = CHAT_NPC_NAMES[Math.floor(Math.random() * CHAT_NPC_NAMES.length)];
+        var phrase2 = CHAT_SYSTEM_PHRASES[Math.floor(Math.random() * CHAT_SYSTEM_PHRASES.length)];
+        chatAdd("system", "Система", phrase2.replace("{name}", pname));
+      } else {
+        // личное сообщение игроку
+        var npc = CHAT_NPC_NAMES[Math.floor(Math.random() * CHAT_NPC_NAMES.length)];
+        var phrase3 = CHAT_PM_PHRASES[Math.floor(Math.random() * CHAT_PM_PHRASES.length)];
+        chatAdd("pm", npc, phrase3, { to: player.name });
+      }
+      scheduleNext();
+    }, delay);
+  }
+  scheduleNext();
+}
+
+/* Горячие клавиши */
+document.addEventListener("keydown", function(e) {
+  var tag = (e.target.tagName || "").toLowerCase();
+  var isInput = (tag === "input" || tag === "textarea" || tag === "select");
+
+  // T — открыть чат (если не в поле ввода)
+  if (!isInput && (e.key === "t" || e.key === "T" || e.key === "е" || e.key === "Е")) {
+    e.preventDefault();
+    if (!CHAT_OPEN) openChat();
+    return;
+  }
+
+  // Esc — закрыть чат
+  if (e.key === "Escape" && CHAT_OPEN) {
+    closeChatForce();
+    return;
+  }
+
+  // Enter в поле чата — отправить
+  if (e.key === "Enter" && e.target.id === "chatInput" && CHAT_OPEN) {
+    e.preventDefault();
+    sendChatMessage();
+    return;
+  }
+});
 
 (function init() {
   try {
@@ -2703,10 +3137,29 @@ function renderLeaderboard() {
     } else {
       openCreateModal();
     }
+    // инициализация чата
+    if (player) {
+      chatRenderMinibar();
+      startFakeChat();
+    }
   } catch (e) {
     alert("⚠ Ошибка при запуске игры:\n" + e.message + "\n\nПопробуй создать нового персонажа.");
   }
 })();
 </script>
+<div id="chatMinibar" class="chat-minibar" onclick="openChat()">
+  <span class="chat-icon">💬</span>
+  <span class="chat-preview" id="chatMinibarPreview">Чат — нажми, чтобы открыть</span>
+  <span class="chat-badge hidden" id="chatMinibarBadge">0</span>
+  <span class="chat-hint">T</span>
+</div>
+<div id="pvpSearchOverlay" class="pvp-search-overlay hidden" onclick="cancelPvpSearch(event)">
+  <div class="pvp-search-box" onclick="event.stopPropagation()">
+    <div class="spinner"></div>
+    <div class="title">⚔ Поиск соперника</div>
+    <div class="status" id="pvpSearchStatus">Сканируем арену...</div>
+    <button class="cancel-btn" onclick="cancelPvpSearchForce()">Отмена</button>
+  </div>
+</div>
 </body>
 </html>

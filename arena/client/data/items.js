@@ -387,7 +387,44 @@ var SHOP_TABLE = [
   { id: "p_s_razboynika2", name: "Щит бессердечного разбойника", slot: "shield", type: "shield", price: 47, dur: 21, minLvl: 4, req: { str: 16, end: 16 }, bonus: { antiDodge: 5, hpFlat: 17 }, zoneArmor: { head: 5, chest: 5, belly: 5, belt: 5, legs: 5 } },
   { id: "p_s_velikana", name: "Качественный щит опытного великана", slot: "shield", type: "shield", price: 71, dur: 25, minLvl: 5, req: { str: 30, end: 15 }, bonus: { antiCrit: 15, antiDodge: 15, dmgReduction: 2, hpFlat: 17 }, zoneArmor: { head: 3, chest: 3, belly: 3, belt: 3, legs: 3 } },
   { id: "p_s_duha", name: "Добротный щит загубленного духа", slot: "shield", type: "shield", price: 71, dur: 25, minLvl: 5, req: { str: 20, end: 20 }, bonus: { hpFlat: 13 }, zoneArmor: { head: 8, chest: 8, belly: 8, belt: 8, legs: 8 } },
+
+    /* === ПРОСТЫЕ ПРЕДМЕТЫ 1-ГО УРОВНЯ === */
+  /* --- РУБАХИ --- */
+  { id: "p_ch_lnyanaya", name: "Простая льняная рубаха", slot: "chest", type: "chest", price: 5, dur: 10, minLvl: 1, bonus: { hpFlat: 3 } },
+  { id: "p_ch_kozh_brodyagi", name: "Кожаная рубаха бродяги", slot: "chest", type: "chest", price: 8, dur: 12, minLvl: 1, req: { end: 3 }, bonus: { hpFlat: 5, antiDodge: 3 } },
+  { id: "p_ch_styogan_veterana", name: "Стёганая рубаха ветерана", slot: "chest", type: "chest", price: 12, dur: 14, minLvl: 1, req: { end: 4 }, bonus: { hpFlat: 8, dmgReduction: 1 } },
+
+  /* --- ШТАНЫ (ПОНОЖИ) --- */
+  { id: "p_gr_prostye", name: "Простые штаны", slot: "greaves", type: "greaves", price: 4, dur: 10, minLvl: 1, bonus: { hpFlat: 2 } },
+  { id: "p_gr_kozh_ohotnika", name: "Кожаные штаны охотника", slot: "greaves", type: "greaves", price: 7, dur: 12, minLvl: 1, req: { end: 3 }, bonus: { hpFlat: 4, antiCrit: 3 } },
+  { id: "p_gr_styogan_strazha", name: "Стёганые штаны стражника", slot: "greaves", type: "greaves", price: 10, dur: 14, minLvl: 1, req: { end: 4 }, bonus: { hpFlat: 6, dmgReduction: 1 } },
+
+  /* --- НАРУЧИ --- */
+  { id: "p_br_tkanevye", name: "Тканевые наручи", slot: "bracers", type: "bracers", price: 4, dur: 10, minLvl: 1, bonus: { hpFlat: 2 } },
+  { id: "p_br_kozh_sledopyta", name: "Кожаные наручи следопыта", slot: "bracers", type: "bracers", price: 6, dur: 12, minLvl: 1, req: { end: 3 }, bonus: { antiDodge: 4 } },
+  { id: "p_br_metall_prostye", name: "Простые металлические наручи", slot: "bracers", type: "bracers", price: 9, dur: 14, minLvl: 1, req: { end: 4 }, bonus: { hpFlat: 2, block: 3 } },
+
+  /* --- САПОГИ --- */
+  { id: "p_lg_prostye", name: "Простые сапоги", slot: "legs", type: "legs", price: 4, dur: 10, minLvl: 1, bonus: { dodge: 2 } },
+  { id: "p_lg_kozh_skitalca", name: "Кожаные сапоги скитальца", slot: "legs", type: "legs", price: 7, dur: 12, minLvl: 1, req: { end: 3 }, bonus: { dodge: 4 } },
+  { id: "p_lg_dorozhnye_gonca", name: "Дорожные сапоги гонца", slot: "legs", type: "legs", price: 10, dur: 14, minLvl: 1, req: { end: 4 }, bonus: { dodge: 3, hpFlat: 3 } },
+
+  /* --- ПЕРЧАТКИ (РУКАВИЦЫ) --- */
+  { id: "p_gl_tkanye", name: "Тканевые перчатки", slot: "wrists", type: "wrists", price: 4, dur: 10, minLvl: 1, bonus: { crit: 2 } },
+  { id: "p_gl_kozh_strelka", name: "Кожаные перчатки стрелка", slot: "wrists", type: "wrists", price: 6, dur: 12, minLvl: 1, req: { end: 3 }, bonus: { crit: 4 } },
+  { id: "p_gl_boevye_prostye", name: "Простые боевые перчатки", slot: "wrists", type: "wrists", price: 10, dur: 14, minLvl: 1, req: { end: 4 }, bonus: { crit: 3, dmgBonus: 1, hpFlat: 2 } },
+
+  /* --- ШЛЕМЫ --- */
+  { id: "p_h_tkany", name: "Тканевая шапка", slot: "head", type: "helmet", price: 4, dur: 10, minLvl: 1, bonus: { hpFlat: 2 } },
+  { id: "p_h_kozh_novobranca", name: "Кожаный шлем новобранца", slot: "head", type: "helmet", price: 7, dur: 12, minLvl: 1, req: { end: 3 }, bonus: { hpFlat: 3, antiCrit: 3 } },
+  { id: "p_h_metall_prostoy", name: "Простой металлический шлем", slot: "head", type: "helmet", price: 10, dur: 14, minLvl: 1, req: { end: 4 }, bonus: { hpFlat: 5, dmgReduction: 1 }, zoneArmor: { head: 3 } },
+
+  /* --- ЩИТЫ --- */
+  { id: "p_s_derev_opolchenca", name: "Деревянный щит ополченца", slot: "shield", type: "shield", price: 6, dur: 9, minLvl: 1, req: { str: 3 }, bonus: { hpFlat: 2 } },
+  { id: "p_s_legkiy_krugly", name: "Лёгкий круглый щит", slot: "shield", type: "shield", price: 8, dur: 11, minLvl: 1, req: { str: 5 }, bonus: { block: 3 } },
+  { id: "p_s_kozh_naemnika", name: "Кожаный щит наёмника", slot: "shield", type: "shield", price: 10, dur: 13, minLvl: 1, req: { str: 6, end: 3 }, bonus: { hpFlat: 3, dmgReduction: 1 } },
 ];
+
 
 var POTIONS = [
   { id: "p_small", name: "Малое зелье", icon: "🧪", heal: 30, price: 25, minLvl: 2, desc: "+30 HP" },

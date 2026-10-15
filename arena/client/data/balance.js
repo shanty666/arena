@@ -214,3 +214,14 @@ var DAILY_QUESTS_POOL = [
   { id: "d_crit10", name: "Мастер крита", desc: "Нанеси 10 критических ударов за день.", target: 10, rewardMoney: 130, rewardPct: 5 },
   { id: "d_heal3", name: "Целитель", desc: "Вылечись 3 раза за день (зельем или у доктора).", target: 3, rewardMoney: 90, rewardPct: 5 }
 ];
+
+/* === PVP === */
+var PVP_REWARD_MULT = 1.5;
+var PVP_COOLDOWN_MS = 30000;
+var PVP_RATING_WIN_EQUAL = 15;
+var PVP_RATING_WIN_HIGHER = 25;
+var PVP_RATING_LOSS = -10;
+var PVP_SEARCH_MIN_MS = 2000;
+var PVP_SEARCH_MAX_MS = 5000;
+var PVP_CONSENT_DELAY_MS = 1500;
+var PVP_PUNISH_MULT = 1.2;
