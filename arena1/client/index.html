@@ -1,0 +1,3584 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Когда есть время</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game">
+  <h1>Когда есть время</h1>
+  <div class="tabs">
+    <div class="tab active" data-tab="home">Мой персонаж</div>
+    <div class="tab" data-tab="fight">Бои</div>
+    <div class="tab" data-tab="quests">Квесты<span id="questBadge" class="badge hidden">!</span></div>
+    <div class="tab" data-tab="inv">Инвентарь</div>
+    <div class="tab" data-tab="equip">Экипировка</div>
+    <div class="tab" data-tab="forge">🔨 Кузнец</div>
+    <div class="tab" data-tab="shop">Магазин</div>
+<div class="tab" data-tab="online">Онлайн</div>
+<div class="tab" data-tab="leaderboard">🏆 Топ PvP</div>
+  </div>
+
+  <div id="home" class="panel">
+    <h2>Мой персонаж</h2>
+    <div id="dailyRewardSection"></div>
+    <div id="homeInfo"></div>
+    <div id="pointsSection"></div>
+    <div id="workSection"></div>
+    <div id="combatStatsSection"></div>
+    <div id="potionSection"></div>
+    <div id="workshopSection"></div>
+    <div id="healSection"></div>
+    <div id="fatigueSection"></div>
+    <div id="resetSection"></div>
+    <div class="action-buttons" id="homeButtons"></div>
+  </div>
+
+  <div id="fight" class="panel hidden">
+    <h2>Арена боёв</h2>
+    <div class="shop-tabs" id="locationTabs"></div>
+    <div class="battle-grid">
+      <div class="fighter-side" id="pSide" title="Нажми для карточки">
+        <div class="side-header" id="pHeader"></div>
+        <div class="hpbar"><div id="pHpBar"></div><div class="hp-text" id="pHpText"></div></div>
+        <div id="pDoll"></div>
+        <div class="side-stats" id="pStats"></div>
+      </div>
+      <div class="center-col">
+        <div id="centerCol"></div>
+        <p style="text-align:center;margin:4px 0 0;">
+          <button id="fightBtn" class="hidden btn-forward" disabled>⚔ Вперёд!</button>
+          <button id="newEnemyBtn" style="font-size:15px;padding:8px 22px;">Найти противника</button>
+          <button id="duelBtn" class="btn-duel" style="font-size:15px;padding:8px 22px;">⚔ PvP</button>
+        </p>
+      </div>
+      <div class="fighter-side" id="eSide" title="Нажми для карточки">
+        <div class="side-header" id="eHeader"></div>
+        <div class="hpbar"><div id="eHpBar" style="width:0%"></div><div class="hp-text" id="eHpText"></div></div>
+        <div id="eDoll"></div>
+        <div class="side-stats" id="eStats"></div>
+      </div>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+
+    <div id="quests" class="panel hidden">
+    <h2>Квесты</h2>
+
+    <div class="quest-tabs">
+      <div class="quest-tab active" data-quest-tab="daily" onclick="switchQuestTab('daily')">📅 Ежедневные</div>
+      <div class="quest-tab" data-quest-tab="main" onclick="switchQuestTab('main')">🏆 Основные</div>
+      <div class="quest-tab" data-quest-tab="location" onclick="switchQuestTab('location')">🗺️ Локации</div>
+      <div class="quest-tab" data-quest-tab="done" onclick="switchQuestTab('done')">✅ Выполненные</div>
+    </div>
+
+    <div id="questTab_daily" class="quest-subpanel">
+      <h3 style="color:#c9a227;margin:0 0 10px;">📅 Ежедневные <span style="font-size:13px;color:#9a8a68;">(сброс через <span id="dailyResetTime">—</span>)</span></h3>
+      <div id="dailyQuestList"></div>
+    </div>
+
+    <div id="questTab_main" class="quest-subpanel hidden">
+      <h3 style="color:#c9a227;margin:0 0 10px;">🏆 Основные квесты</h3>
+      <div id="questActiveList"></div>
+    </div>
+
+    <div id="questTab_location" class="quest-subpanel hidden">
+      <h3 style="color:#c9a227;margin:0 0 10px;">🗺️ Локационные квесты</h3>
+      <p style="color:#9a8a68;font-size:13px;margin-top:0;">Квесты, где нужно побеждать врагов в конкретных локациях.</p>
+      <div id="locationQuestList"></div>
+    </div>
+
+    <div id="questTab_done" class="quest-subpanel hidden">
+      <h3 style="color:#7ab648;margin:0 0 10px;">✅ Выполненные квесты</h3>
+      <div id="questCompletedList"></div>
+    </div>
+  </div>
+
+  <div id="inv" class="panel hidden"><h2>Инвентарь</h2><div id="invList"></div></div>
+  <div id="equip" class="panel hidden"><h2>Экипировка</h2><div id="equipList"></div></div>
+  <div id="forge" class="panel hidden">
+    <h2>🔨 Кузнец</h2>
+    <p style="color:#9a8a68;font-size:13px;">Улучшай броню и щит материалами, добытыми в боях. Оружие точится свитками (вкладка Экипировка).</p>
+    <div id="forgeMaterials" style="margin:12px 0;padding:12px;background:#120e0a;border:1px solid #5a4630;border-radius:4px;"></div>
+    <div id="forgeList"></div>
+  </div>
+
+  <div id="shop" class="panel hidden">
+    <h2>Магазин</h2>
+    <p>Монеты: <b id="shopMoney">0</b></p>
+    <div class="shop-tabs">
+      <div class="shop-tab active" data-shop-tab="potions">🧪 Зелья</div>
+      <div class="shop-tab" data-shop-tab="knives">🗡 Ножи</div>
+      <div class="shop-tab" data-shop-tab="swords">⚔ Мечи</div>
+      <div class="shop-tab" data-shop-tab="axes">🪓 Топоры</div>
+      <div class="shop-tab" data-shop-tab="clubs">🔨 Дубины</div>
+      <div class="shop-tab" data-shop-tab="helmet">🪖 Шлемы</div>
+      <div class="shop-tab" data-shop-tab="shield">🛡 Щиты</div>
+      <div class="shop-tab" data-shop-tab="wrists">🥊 Рукавицы</div>
+      <div class="shop-tab" data-shop-tab="bracers">🥊 Наручи</div>
+      <div class="shop-tab" data-shop-tab="chest">🛡 Нагрудники</div>
+      <div class="shop-tab" data-shop-tab="belt">🪢 Пояса</div>
+      <div class="shop-tab" data-shop-tab="legs">👢 Обувь</div>
+      <div class="shop-tab" data-shop-tab="greaves">🦿 Поножи</div>
+      <div class="shop-tab" data-shop-tab="earrings">👂 Серьги</div>
+      <div class="shop-tab" data-shop-tab="amulets">📿 Амулеты</div>
+      <div class="shop-tab" data-shop-tab="rings">💍 Кольца</div>
+      <div class="shop-tab" data-shop-tab="scrolls">📜 Свитки</div>
+    </div>
+    <div class="level-tabs" id="shopLevelTabs"></div>
+    <div class="shop-panel"><div id="shopContent"></div></div>
+  </div>
+
+<div id="online" class="panel hidden">
+  <h2>Онлайн</h2>
+  <div class="online-header">
+    <div class="online-title">Зал воинов: <span class="online-count" id="onlineCount">0</span></div>
+    <button onclick="regenerateOnline()">Обновить</button>
+  </div>
+  <div class="online-list" id="onlineList"></div>
+</div>
+
+  <div id="leaderboard" class="panel hidden">
+    <h2>🏆 Таблица лидеров</h2>
+    <p style="color:#9a8a68;font-size:13px;">Топ бойцов арены</p>
+    <div id="leaderboardList"></div>
+  </div>
+</div>
+
+<div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModalForce()">&times;</button>
+    <div class="modal-avatar"><img id="modalAvatar" src="" alt=""></div>
+    <h3 id="modalName"></h3>
+    <div id="modalStats"></div>
+    <div id="modalEquipSection"></div>
+  </div>
+</div>
+<div id="resetOverlay" class="modal-overlay hidden" onclick="closeResetModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeResetModalForce()">&times;</button>
+    <h3>Сброс характеристик</h3>
+    <p style="color:#9a8a68;font-size:13px;margin-bottom:14px;">Распредели заново все очки.</p>
+    <div id="resetDistributeBlock"></div>
+    <p>Осталось очков: <b id="resetPointsLeft">0</b></p>
+    <p style="text-align:center;margin-top:14px;">
+      <button id="resetConfirmBtn" onclick="confirmReset()">Подтвердить</button>
+      <button onclick="closeResetModalForce()" style="margin-left:8px;">Отмена</button>
+    </p>
+  </div>
+</div>
+<div id="xpTableOverlay" class="modal-overlay hidden" onclick="closeXpTable(event)">
+  <div class="modal-card" style="max-width:620px;" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeXpTableForce()">&times;</button>
+    <h3>📜 Таблица опыта и апов</h3>
+    <p style="color:#9a8a68;font-size:12px;text-align:center;margin:0 0 10px;">Пороги опыта + награды за апы (как в БК). Жёлтая строка — твой текущий ап.</p>
+    <div id="xpTableContent"></div>
+  </div>
+</div>
+<div id="historyOverlay" class="modal-overlay hidden" onclick="closeHistory(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeHistoryForce()">&times;</button>
+    <h3>📜 История боёв</h3>
+    <p style="color:#9a8a68;font-size:12px;text-align:center;margin:0 0 10px;">Последние 50 боёв. Нажми на бой, чтобы раскрыть подробности.</p>
+    <div id="historyContent"></div>
+  </div>
+</div>
+<div id="createOverlay" class="modal-overlay hidden" onclick="closeCreateModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeCreateModalForce()">&times;</button>
+    <h3>Создать нового бойца</h3>
+    <p style="color:#e07020;font-size:13px;margin-bottom:12px;">⚠ Текущий персонаж будет удалён!</p>
+    <p>Имя: <input type="text" id="nameInput" maxlength="16"></p>
+    <p>Пол: <select id="genderInput"><option value="М">Мужской</option><option value="Ж">Женский</option></select></p>
+    <p>Возраст: <input type="number" id="ageInput" min="14" max="99" value="25" style="width:80px;"></p>
+    <p>Аватар:</p>
+    <div id="avatarBlock" style="display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap;"></div>
+    <p>Осталось очков: <b id="pointsLeft">12</b></p>
+    <div id="statsBlock"></div>
+    <p style="text-align:center;margin-top:14px;">
+      <button id="createBtn">Создать</button>
+      <button onclick="closeCreateModalForce()" style="margin-left:8px;">Отмена</button>
+    </p>
+  </div>
+</div>
+<div id="chatOverlay" class="chat-modal hidden" onclick="closeChat(event)">
+  <div class="chat-window" onclick="event.stopPropagation()">
+    <div class="chat-header">
+      <span class="chat-title">💬 Чат</span>
+      <button class="chat-close" onclick="closeChatForce()">&times;</button>
+    </div>
+    <div class="chat-tabs" id="chatTabs"></div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-row">
+      <select id="chatPmSelect" class="hidden"></select>
+      <input type="text" id="chatInput" maxlength="200"
+             placeholder="Написать сообщение..." autocomplete="off">
+      <button onclick="sendChatMessage()">Отправить</button>
+    </div>
+  </div>
+</div>
+
+<script src="data/items.js"></script>
+<script src="data/balance.js"></script>
+<script>
+"use strict";
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+window.onerror = function(msg, url, line) {
+  alert("⚠ Ошибка JS:\n" + msg + "\nСтрока: " + line + "\n\nСообщи разработчику этот текст!");
+  return false;
+};
+
+/* === СИСТЕМА ЭКЗЕМПЛЯРОВ ПРЕДМЕТОВ ===
+   Экземпляр: { id: "w_kinjal", dur: 27, upg: 3, craft: 0 }
+   Шаблон берётся из SHOP_TABLE по id */
+function getTemplate(iid) {
+  if (!iid) return null;
+  return SHOP_TABLE.find(function(x) { return x.id === iid; }) || null;
+}
+function makeItemInstance(iid) {
+  var t = getTemplate(iid);
+  if (!t) return null;
+  return { id: iid, dur: getMaxDurability(t), upg: 0, craft: 0 };
+}
+function getInstUpg(inst) { return (inst && inst.upg) || 0; }
+function getInstCraft(inst) { return (inst && inst.craft) || 0; }
+function getInstUpgMult(inst) {
+  var lv = getInstUpg(inst);
+  if (lv <= 0) return 1;
+  return 1 + UPGRADE_DATA[lv - 1].mult;
+}
+function getInstCraftMult(inst) {
+  var lv = getInstCraft(inst);
+  if (lv <= 0) return 1;
+  return 1 + CRAFT_RECIPES[lv - 1].mult;
+}
+
+var skillState = null;
+var player = null, enemy = null;
+var attackZones = [], blockZones = [];
+var newStats = { str: 1, agi: 1, intu: 1, end: 1 };
+var left = 12;
+var currentTab = "home";
+var currentQuestTab = "daily";
+var resetStats = { str: 1, agi: 1, intu: 1, end: 1 };
+var resetLeft = 0;
+var combatState = { dodgeBoost: 0 };
+var isDuel = false;
+var battleEvents = [];
+var battleRounds = 0;
+var battleRecording = false;
+var turnDeadline = 0;
+
+function save() { localStorage.setItem("arena_save", JSON.stringify(player)); }
+function loadSave() { try { return JSON.parse(localStorage.getItem("arena_save")); } catch (e) { return null; } }
+function two(n) { return n < 10 ? "0" + n : "" + n; }
+
+function getDailyReward(lvl) {
+  if (lvl <= 5) return 30;
+  if (lvl <= 9) return 80;
+  if (lvl <= 12) return 150;
+  return 300;
+}
+function getBattleGold() { return 1 + Math.floor(Math.random() * 3); }
+function getXpForBot(l) { return (l < 0 || l >= MAX_LEVEL) ? 0 : (XP_PER_BOT[l] || 0); }
+function getResetCost(rc) { if (rc < FREE_RESETS) return 0; return Math.floor(30 * Math.pow(1.5, rc - FREE_RESETS)); }
+function levelRange() {
+  if (!player || player.level >= MAX_LEVEL) return 0;
+  var cur = XP_TABLE[player.level][0];
+  var nxt = XP_TABLE[player.level + 1] ? XP_TABLE[player.level + 1][0] : cur;
+  return Math.max(0, nxt - cur);
+}
+function questExp(q) { return Math.floor(levelRange() * (q.rewardPct || 0) / 100); }
+
+function checkRequirements(item) {
+  if (!item || !item.req) return { ok: true, missing: [] };
+  var missing = [];
+  for (var stat in item.req) {
+    var ps = player[stat] || 0;
+    if (ps < item.req[stat]) missing.push(STAT_NAMES[stat] + " " + ps + "/" + item.req[stat]);
+  }
+  return { ok: missing.length === 0, missing: missing };
+}
+function checkMinLevel(item) { if (!item.minLvl) return true; return player.level >= item.minLvl; }
+
+function nextThreshold() {
+  if (player.level >= MAX_LEVEL) return Infinity;
+  var arr = XP_TABLE[player.level];
+  if (player.ap + 1 < arr.length) return arr[player.ap + 1];
+  if (player.level + 1 < XP_TABLE.length) return XP_TABLE[player.level + 1][0];
+  return Infinity;
+}
+
+function calcTotalEarned(lvl, ap) {
+  var total = 0;
+  for (var i = 0; i <= lvl && i < AP_REWARDS.length; i++) {
+    var arr = AP_REWARDS[i];
+    var end = (i === lvl) ? ap : arr.length - 1;
+    for (var j = 0; j <= end && j < arr.length; j++) total += arr[j];
+  }
+  return total;
+}
+
+function checkProgress() {
+  var guard = 0;
+  while (player.exp >= nextThreshold() && guard < 5000) {
+    guard++;
+    var arr = XP_TABLE[player.level];
+    if (player.ap + 1 < arr.length) {
+      player.ap++;
+      var p = AP_REWARDS[player.level][player.ap] || 0;
+      if (p > 0) {
+        player.freePoints += p;
+        player.totalEarned += p;
+        var word = p === 1 ? "очко" : (p < 5 ? "очка" : "очков");
+        addLog("⬆ <span class='heal'>Ап " + player.ap + "! +" + p + " " + word + " характеристик.</span>", "heal");
+      } else {
+        addLog("⬆ Ап " + player.ap + ". (без очков)", "sys");
+      }
+    } else {
+      player.level++;
+      player.ap = 0;
+      var b = AP_REWARDS[player.level] ? AP_REWARDS[player.level][0] : 0;
+      if (b > 0) { player.freePoints += b; player.totalEarned += b; }
+      recalcMaxHp();
+      player.hp = player.maxHp;
+      addLog("<b>🎉 УРОВЕНЬ " + player.level + "!</b>" + (b > 0 ? " <span style='color:#7ab648'>+" + b + " очков!</span>" : ""), "heal");
+      if (player.level >= MAX_LEVEL) { addLog("<b class='max-level'>⭐ МАКСИМАЛЬНЫЙ УРОВЕНЬ! ⭐</b>", "heal"); break; }
+    }
+  }
+}
+function spendPoint(k) {
+  if (!player || player.freePoints <= 0) return;
+  player.freePoints--;
+  player[k]++;
+  recalcMaxHp();
+  save();
+  renderHome();
+}
+
+function getMaxDurability(item) {
+  if (!item) return 0;
+  if (item.dur) return item.dur;
+  if (item.slot === "weapon") return 10;
+  return 15;
+}
+function getRepairCoeff(item) { return DUR_REPAIR_COEFF; }
+function getRepairCost(slot) {
+  var inst = player.equipment[slot];
+  if (!inst) return 0;
+  var t = getTemplate(inst.id);
+  if (!t) return 0;
+  var maxDur = getMaxDurability(t);
+  var curDur = inst.dur !== undefined ? inst.dur : maxDur;
+  var lost = maxDur - curDur;
+  if (lost <= 0) return 0;
+  return Math.ceil((lost / maxDur) * t.price * getRepairCoeff(t));
+}
+function getTotalRepairCost() { var t = 0; SLOTS.forEach(function(s) { t += getRepairCost(s); }); return t; }
+function wearSlot(slot) {
+  var inst = player.equipment && player.equipment[slot];
+  if (!inst) return;
+  var t = getTemplate(inst.id);
+  if (!t) return;
+  if (inst.dur === undefined) inst.dur = getMaxDurability(t);
+  if (inst.dur <= 0) return;
+  inst.dur--;
+  if (inst.dur <= 0) {
+    addLog("💔 <span class='dmg'>" + t.name + " сломан! Нужна починка.</span>", "dmg");
+  }
+}
+function repairAll() {
+  var total = getTotalRepairCost();
+  if (total <= 0) { addLog("🔧 Всё снаряжение в идеальном состоянии!", "sys"); return; }
+  if (player.money < total) { alert("Не хватает монет! Нужно: " + total); return; }
+  player.money -= total;
+  SLOTS.forEach(function(s) {
+    var inst = player.equipment[s];
+    if (!inst) return;
+    var t = getTemplate(inst.id);
+    if (t) inst.dur = getMaxDurability(t);
+  });
+  addLog("🔧 <span class='heal'>Всё снаряжение починено! (-" + total + " монет)</span>", "heal");
+  save(); renderHome(); renderEquip();
+}
+function craftUpgrade(slot) {
+  var inst = player.equipment[slot];
+  if (!inst) return;
+  var t = getTemplate(inst.id);
+  if (!t) return;
+  var curLv = inst.craft || 0;
+  if (curLv >= 3) { alert("Максимальный крафт +3!"); return; }
+  var recipe = CRAFT_RECIPES[curLv];
+  if (player.materials.t1 < recipe.t1 || player.materials.t2 < recipe.t2 || player.materials.t3 < recipe.t3) {
+    alert("Не хватает материалов!");
+    return;
+  }
+  if (player.money < recipe.cost) {
+    alert("Не хватает монет!");
+    return;
+  }
+  player.materials.t1 -= recipe.t1;
+  player.materials.t2 -= recipe.t2;
+  player.materials.t3 -= recipe.t3;
+  player.money -= recipe.cost;
+  inst.craft = recipe.lv;
+  addLog("🔨 <span class='heal'>" + t.name + " улучшен крафтом до +" + recipe.lv + "!</span>", "heal");
+  recalcMaxHp();
+  save(); renderForge(); renderEquip(); renderHome();
+}
+function repairItem(slot) {
+  var cost = getRepairCost(slot);
+  if (cost <= 0) return;
+  if (player.money < cost) { alert("Не хватает монет!"); return; }
+  player.money -= cost;
+  var inst = player.equipment[slot];
+  if (!inst) return;
+  var t = getTemplate(inst.id);
+  if (t) inst.dur = getMaxDurability(t);
+  addLog("🔧 <span class='heal'>" + (t ? t.name : "Предмет") + " починен (-" + cost + " монет)</span>", "heal");
+  save(); renderHome(); renderEquip();
+}
+function tryUpgrade(slot, useProtect) {
+  var inst = player.equipment[slot];
+  if (!inst) return;
+  var t = getTemplate(inst.id);
+  if (!t) return;
+  var curLv = inst.upg || 0;
+  if (curLv >= 5) { alert("Максимальная заточка +5!"); return; }
+  var nextLv = curLv + 1;
+  var scrollId = "scroll_" + nextLv;
+  if (!player.scrolls || !player.scrolls[scrollId] || player.scrolls[scrollId] <= 0) { alert("Нет свитка заточки +" + nextLv + "! Купи в магазине."); return; }
+  if (useProtect && (!player.scrolls["scroll_protect"] || player.scrolls["scroll_protect"] <= 0)) { alert("Нет защитного свитка!"); return; }
+  player.scrolls[scrollId]--;
+  if (useProtect) player.scrolls["scroll_protect"]--;
+  var chance = UPGRADE_DATA[curLv].chance + (useProtect ? PROTECT_BONUS : 0);
+  if (Math.random() * 100 < chance) {
+    inst.upg = nextLv;
+    addLog("⚒️ <span class='heal'>" + t.name + " заточен до +" + nextLv + "!</span>", "heal");
+  } else {
+    var resetTo = (nextLv >= 5) ? 1 : 0;
+    inst.upg = resetTo;
+    addLog("💥 <span class='dmg'>Заточка НЕ удалась! " + t.name + " → +" + resetTo + "</span>", "dmg");
+  }
+  player.dailyProgress.upgrades = (player.dailyProgress.upgrades || 0) + 1;
+  save(); renderEquip(); renderHome(); renderShop();
+}
+function getCraftLevel(itemId) {
+  if (!itemId) return 0;
+  return (player.craftLevel && player.craftLevel[itemId]) || 0;
+}
+
+function locationAllowsT2(locId) {
+  var loc = LOCATIONS.find(function(l) { return l.id === locId; });
+  return loc && loc.minLevel >= 3;
+}
+
+function getFatigueLevel() {
+  var pct = player.fatigue;
+  for (var i = FATIGUE_LEVELS.length - 1; i >= 0; i--) if (pct >= FATIGUE_LEVELS[i].min) return FATIGUE_LEVELS[i];
+  return FATIGUE_LEVELS[0];
+}
+function getPlayerBuild() {
+  if (player.intu >= player.agi && player.intu >= player.end && player.intu >= player.str) return "crit";
+  if (player.agi >= player.intu && player.agi >= player.end && player.agi >= player.str) return "dodge";
+  return "tank";
+}
+
+function rollTarget(skill) { return skill.minC + Math.floor(Math.random() * (skill.maxC - skill.minC + 1)); }
+function initSkillState() {
+  var build = getPlayerBuild();
+  var skills = SKILLS[build];
+  skillState = {
+    build: build,
+    charges: [0, 0, 0],
+    targets: [rollTarget(skills[0]), rollTarget(skills[1]), rollTarget(skills[2])],
+    eCharges: [0, 0, 0],
+    eTargets: [rollTarget(skills[0]), rollTarget(skills[1]), rollTarget(skills[2])],
+    eBuild: build,
+    pFx: { wall: false, shadow: 0, rush: false, series: false, pierce: false, gCrit: false },
+    eFx: { wall: false, shadow: 0, rush: false, series: false, pierce: false, gCrit: false },
+    pStun: false, eStun: false, usedThisTurn: false, selectedSkill: null
+  };
+}
+function addCharge(who, amt) {
+  if (!skillState) return;
+  var arr = who === "player" ? skillState.charges : skillState.eCharges;
+  var tgt = who === "player" ? skillState.targets : skillState.eTargets;
+  for (var i = 0; i < 3; i++) arr[i] = Math.min(arr[i] + amt, tgt[i]);
+}
+function canUseSkill(idx) { return skillState && skillState.charges[idx] >= skillState.targets[idx]; }
+function resetAllCharges(who, usedIdx) {
+  if (!skillState) return;
+  var isPlayer = (who === "player");
+  var arr = isPlayer ? skillState.charges : skillState.eCharges;
+  var tgt = isPlayer ? skillState.targets : skillState.eTargets;
+  var build = isPlayer ? skillState.build : skillState.eBuild;
+  var skills = SKILLS[build];
+  for (var i = 0; i < 3; i++) {
+    arr[i] = 0;
+    if (i === usedIdx) tgt[i] = rollTarget(skills[i]);
+  }
+}
+function usePlayerSkill(idx) {
+  if (!skillState || !canUseSkill(idx)) return;
+  if (skillState.selectedSkill === idx) {
+    skillState.selectedSkill = null;
+    addLog("↩️ Навык отменён.", "sys");
+  } else if (skillState.selectedSkill === null) {
+    skillState.selectedSkill = idx;
+    var sk = SKILLS[skillState.build][idx];
+    var isInstant = (skillState.build === "crit" && idx === 2) || (skillState.build === "tank" && (idx === 1 || idx === 2));
+    addLog("✨ <span class='epic'>Выбран: " + sk.icon + " " + sk.name + (isInstant ? " (ВМЕСТО удара)" : " (усилит удар)") + "</span>", "sys");
+  }
+  save(); renderBattleScreen();
+}
+function applySelectedSkill() {
+  if (!skillState || skillState.selectedSkill === null) return "none";
+  var idx = skillState.selectedSkill;
+  var build = skillState.build;
+  var sk = SKILLS[build][idx];
+  resetAllCharges("player", idx);
+  skillState.selectedSkill = null;
+  skillState.usedThisTurn = true;
+  addLog("⚡ <span class='sys'>Все заряды навыков сброшены!</span>", "sys");
+  if (build === "crit") {
+    if (idx === 0) { skillState.pFx.gCrit = true; addLog("💀 <span class='epic'>Смертельный удар активирован!</span>", "sys"); return "buff"; }
+    if (idx === 1) { skillState.pFx.pierce = true; addLog("🗡️ <span class='epic'>Пронзание активировано!</span>", "sys"); return "buff"; }
+    addLog("⚔️ <span class='epic'>Двойной удар!</span>", "sys"); performMultiStrike(2, 0.7, "⚔️"); return "instant";
+  }
+  if (build === "dodge") {
+    if (idx === 0) { skillState.pFx.rush = true; addLog("💨 <span class='epic'>Рывок активирован!</span>", "sys"); return "buff"; }
+    if (idx === 1) { skillState.pFx.series = true; addLog("🌀 <span class='epic'>Серия готова! Следующий удар +30% урона!</span>", "sys"); return "buff"; }
+    skillState.pFx.shadow = 2; addLog("👤 <span class='epic'>Тень активирована! +10% уворота на 2 хода!</span>", "sys"); return "buff";
+  }
+  if (idx === 0) { skillState.pFx.wall = true; addLog("🛡️ <span class='epic'>Железная стена активирована!</span>", "sys"); return "buff"; }
+  if (idx === 1) { addLog("🔨 <span class='epic'>Удар щитом!</span>", "sys"); performShieldBash(); return "instant"; }
+  var heal = Math.floor(player.maxHp * 0.10);
+  player.hp = Math.min(player.maxHp, player.hp + heal);
+  addLog("💚 <span class='epic'>Регенерация! +" + heal + " HP!</span>", "heal");
+  var pc = document.getElementById("pSide");
+  pc.classList.add("heal-pulse");
+  setTimeout(function() { pc.classList.remove("heal-pulse"); }, 500);
+  return "instant";
+}
+
+function getEquippedWeapon() {
+  var inst = player.equipment && player.equipment.weapon;
+  if (!inst) return null;
+  if (inst.dur !== undefined && inst.dur <= 0) return null;
+  return inst;
+}
+function hasShield() {
+  var inst = player.equipment && player.equipment.shield;
+  if (!inst) return false;
+  if (inst.dur !== undefined && inst.dur <= 0) return false;
+  return true;
+}
+function getWeaponRange(att) {
+  if (att === player) {
+    var inst = getEquippedWeapon();
+    if (!inst) return { min: 3, max: 5 };
+    var t = getTemplate(inst.id);
+    if (!t) return { min: 3, max: 5 };
+    var mult = getInstUpgMult(inst);
+    return { min: Math.round(t.dmgMin * mult), max: Math.round(t.dmgMax * mult) };
+  }
+  return { min: att.dmgMin || 3, max: att.dmgMax || 5 };
+}
+function maxBlockZones() {
+  var inst = getEquippedWeapon();
+  var t = inst ? getTemplate(inst.id) : null;
+  var base = (t && t.twoHand) ? 1 : 2;
+  if (hasShield()) base += 1;
+  return base;
+}
+function calcPlayerDmg() {
+  var eb = getEquipBonus();
+  var fl = getFatigueLevel();
+  var wr = getWeaponRange(player);
+  var dmg = wr.min + Math.floor(Math.random() * (wr.max - wr.min + 1));
+  dmg += Math.floor((player.str + eb.str) * 0.5);
+  dmg = Math.max(1, Math.floor(dmg * fl.dmgMult));
+  if (skillState && skillState.pFx.rush) { dmg = Math.floor(dmg * 1.5); skillState.pFx.rush = false; }
+  if (skillState && skillState.pFx.series) { dmg = Math.floor(dmg * 1.3); skillState.pFx.series = false; }
+  return dmg;
+}
+function calcEnemyDmg() {
+  if (!enemy) return 0;
+  var wr = getWeaponRange(enemy);
+  var dmg = wr.min + Math.floor(Math.random() * (wr.max - wr.min + 1));
+  dmg += Math.floor(enemy.str * 0.5);
+  if (skillState && skillState.eFx.rush) { dmg = Math.floor(dmg * 1.5); skillState.eFx.rush = false; }
+  if (skillState && skillState.eFx.series) { dmg = Math.floor(dmg * 1.3); skillState.eFx.series = false; }
+  return dmg;
+}
+function performMultiStrike(count, mult, icon) {
+  if (!enemy || enemy.hp <= 0) return;
+  for (var i = 0; i < count; i++) {
+    if (enemy.hp <= 0) break;
+    var dmg = Math.max(1, Math.floor(calcPlayerDmg() * mult));
+    enemy.hp -= dmg;
+    addLog(icon + " Удар " + (i + 1) + ": <span class='dmg'>" + dmg + "</span> урона.");
+  }
+  renderBattleScreen();
+  if (enemy.hp <= 0) victory();
+}
+function performShieldBash() {
+  if (!enemy || enemy.hp <= 0) return;
+  var dmg = Math.max(1, Math.floor(calcPlayerDmg()));
+  enemy.hp -= dmg;
+  skillState.eStun = true;
+  addLog("🔨 Удар щитом: <span class='dmg'>" + dmg + "</span> урона. Враг оглушён!", "sys");
+  renderBattleScreen();
+  if (enemy.hp <= 0) victory();
+}
+
+function tryEnemySkill() {
+  if (!skillState || !enemy || enemy.hp <= 0) return;
+  var build = skillState.eBuild;
+  var skills = SKILLS[build];
+  for (var i = 0; i < 3; i++) {
+    if (skillState.eCharges[i] >= skillState.eTargets[i]) {
+      var useIdx = i;
+      var hpPct = enemy.hp / enemy.maxHp;
+      var pHpPct = player.hp / player.maxHp;
+      if (hpPct < 0.3) { if (build === "tank" && i === 2) useIdx = 2; else if (build === "tank" && i === 0) useIdx = 0; }
+      else if (pHpPct < 0.3) { if (build === "crit" && i === 0) useIdx = 0; else if (build === "dodge" && i === 1) useIdx = 1; }
+      resetAllCharges("enemy", useIdx);
+      executeEnemySkill(useIdx);
+      return;
+    }
+  }
+}
+function executeEnemySkill(idx) {
+  var build = skillState.eBuild;
+  if (build === "crit") {
+    if (idx === 0) { skillState.eFx.gCrit = true; addLog("<span class='dmg'>🤖 Бот: 💀 Смертельный удар готов!</span>", "sys"); }
+    else if (idx === 1) { skillState.eFx.pierce = true; addLog("<span class='dmg'>🤖 Бот: 🗡️ Пронзание!</span>", "sys"); }
+    else {
+      addLog("<span class='dmg'>🤖 Бот: ⚔️ Двойной удар!</span>", "sys");
+      var d1 = Math.max(1, Math.floor(calcEnemyDmg() * 0.7));
+      var d2 = Math.max(1, Math.floor(calcEnemyDmg() * 0.7));
+      player.hp -= d1; player.hp -= d2;
+      addLog("<span class='dmg'>Удар 1: " + d1 + ", Удар 2: " + d2 + "</span>");
+    }
+  } else if (build === "dodge") {
+    if (idx === 0) { skillState.eFx.rush = true; addLog("<span class='dmg'>🤖 Бот: 💨 Рывок!</span>", "sys"); }
+    else if (idx === 1) { skillState.eFx.series = true; addLog("<span class='dmg'>🤖 Бот: 🌀 Серия готова!</span>", "sys"); }
+    else { skillState.eFx.shadow = 2; addLog("<span class='dmg'>🤖 Бот: 👤 Тень!</span>", "sys"); }
+  } else {
+    if (idx === 0) { skillState.eFx.wall = true; addLog("<span class='dmg'>🤖 Бот: 🛡️ Железная стена!</span>", "sys"); }
+    else if (idx === 1) {
+      var d = Math.max(1, Math.floor(calcEnemyDmg()));
+      player.hp -= d; skillState.pStun = true;
+      addLog("<span class='dmg'>🤖 Бот: 🔨 Удар щитом! " + d + " урона. Ты оглушён!</span>");
+    } else {
+      var heal = Math.floor(enemy.maxHp * 0.10);
+      enemy.hp = Math.min(enemy.maxHp, enemy.hp + heal);
+      addLog("<span class='dmg'>🤖 Бот: 💚 Регенерация +" + heal + " HP!</span>");
+    }
+  }
+  renderBattleScreen();
+  if (player.hp <= 0) defeat();
+}
+
+function buyScroll(id) {
+  var s = SCROLLS.find(function(x) { return x.id === id; });
+  if (!s || player.money < s.price) return;
+  if (!confirm("Купить «" + s.name + "» за " + s.price + " монет?")) return;
+  player.money -= s.price;
+  if (!player.scrolls) player.scrolls = {};
+  player.scrolls[id] = (player.scrolls[id] || 0) + 1;
+  player.dailyProgress.purchases = (player.dailyProgress.purchases || 0) + 1;
+  alert("✅ «" + s.name + "» куплен!");
+  save(); renderShop(); renderHome();
+}
+
+function ensureFields() {
+  if (!player.questProgress) player.questProgress = { kills: 0, buys: 0 };
+  if (player.questProgress.kills === undefined) player.questProgress.kills = 0;
+  if (player.questProgress.buys === undefined) player.questProgress.buys = 0;
+  if (!player.questProgress.locationKills) player.questProgress.locationKills = {};
+  if (!player.questsClaimed) player.questsClaimed = [];
+  if (!player.age) player.age = 25;
+  if (!player.gender) player.gender = "М";
+  if (player.resetCount === undefined) player.resetCount = 0;
+  if (!player.potions) player.potions = {};
+  if (!player.scrolls) player.scrolls = {};
+  if (!player.durability) player.durability = {};
+  if (!player.upgrades) player.upgrades = {};
+if (!player.materials) player.materials = { t1: 0, t2: 0, t3: 0 };
+if (!player.craftLevel) player.craftLevel = {};
+if (!player.craftMods) player.craftMods = {};
+  if (player.lastHpRegen === undefined) player.lastHpRegen = Date.now();
+  if (player.fatigue === undefined) player.fatigue = 0;
+  if (player.lastFatigueTick === undefined) player.lastFatigueTick = Date.now();
+  if (!player.lastDailyReward) player.lastDailyReward = 0;
+  if (!player.dailyProgress) player.dailyProgress = { kills: 0, blocks: 0, dodges: 0, streak: 0, duelWins: 0, upgrades: 0, workShifts: 0, purchases: 0, crits: 0, heals: 0 };
+if (player.dailyProgress.duelWins === undefined) player.dailyProgress.duelWins = 0;
+if (player.dailyProgress.upgrades === undefined) player.dailyProgress.upgrades = 0;
+if (player.dailyProgress.workShifts === undefined) player.dailyProgress.workShifts = 0;
+if (player.dailyProgress.purchases === undefined) player.dailyProgress.purchases = 0;
+if (player.dailyProgress.crits === undefined) player.dailyProgress.crits = 0;
+if (player.dailyProgress.heals === undefined) player.dailyProgress.heals = 0;
+  if (!player.dailyClaimed) player.dailyClaimed = [];
+  if (!player.lastDailyReset) player.lastDailyReset = todayKey();
+  if (!player.dailyQuests) player.dailyQuests = pickDailyQuests();
+  if (!player.equipment) player.equipment = {};
+  if (player.ap === undefined) player.ap = 0;
+  if (player.freePoints === undefined) player.freePoints = 0;
+  if (player.totalEarned === undefined) player.totalEarned = calcTotalEarned(player.level, player.ap);
+  if (player.exp === undefined) player.exp = 0;
+  if (!player.battleHistory) player.battleHistory = [];
+  if (!player.workShift) player.workShift = null;
+  if (!player.bossCooldowns) player.bossCooldowns = {};
+  if (player.pvpWins === undefined) player.pvpWins = 0;
+  if (player.pvpLosses === undefined) player.pvpLosses = 0;
+  if (player.pvpRating === undefined) player.pvpRating = 0;
+  if (player.pvpLastFight === undefined) player.pvpLastFight = 0;
+  /* Миграция со старого формата: переносим общий кулдаун на замок */
+  if (player.bossCooldownUntil !== undefined && player.bossCooldownUntil > 0) {
+    if (player.bossCooldowns.castle === undefined || player.bossCooldowns.castle < player.bossCooldownUntil) {
+      player.bossCooldowns.castle = player.bossCooldownUntil;
+    }
+    delete player.bossCooldownUntil;
+  }
+  if (!player.workEndTime) player.workEndTime = 0;
+  if (!player.workDayCount) player.workDayCount = { short: 0, medium: 0, long: 0 };
+  if (!player.workResetTime) player.workResetTime = Date.now() + 2 * 24 * 3600 * 1000;
+  if (player.level > MAX_LEVEL) { player.level = MAX_LEVEL; player.ap = 0; }
+  if (player.level < 0) player.level = 0;
+    /* === МИГРАЦИЯ СТАРЫХ СЕЙВОВ НА ЭКЗЕМПЛЯРЫ === */
+  if (player.inventory && player.inventory.length > 0 && typeof player.inventory[0] === "string") {
+    player.inventory = player.inventory.map(function(iid) {
+      var t = getTemplate(iid);
+      if (!t) return null;
+      return { id: iid, dur: getMaxDurability(t), upg: 0, craft: 0 };
+    }).filter(function(x) { return x !== null; });
+  }
+  /* Переносим старые наручи из wrists в bracers */
+  if (player.equipment && player.equipment.wrists) {
+    var oldWrists = player.equipment.wrists;
+    var oldId = (typeof oldWrists === "string") ? oldWrists : oldWrists.id;
+    if (oldId && oldId.indexOf("naruchi") >= 0 && !player.equipment.bracers) {
+      player.equipment.bracers = player.equipment.wrists;
+      delete player.equipment.wrists;
+    }
+  }
+
+  if (player.equipment) {
+    SLOTS.forEach(function(s) {
+      var v = player.equipment[s];
+      if (!v) return;
+      if (typeof v === "string") {
+        var t = getTemplate(v);
+        if (!t) { delete player.equipment[s]; return; }
+        var dur = (player.durability && player.durability[s] !== undefined)
+          ? player.durability[s] : getMaxDurability(t);
+        var upg = (player.upgrades && player.upgrades[s]) || 0;
+        var craft = (player.craftLevel && player.craftLevel[v]) || 0;
+        player.equipment[s] = { id: v, dur: dur, upg: upg, craft: craft };
+      } else {
+        var t2 = getTemplate(v.id);
+        if (!t2) { delete player.equipment[s]; return; }
+        if (v.dur === undefined) v.dur = getMaxDurability(t2);
+        if (v.upg === undefined) v.upg = 0;
+        if (v.craft === undefined) v.craft = 0;
+      }
+    });
+  }
+  delete player.durability;
+  delete player.upgrades;
+  delete player.craftLevel;
+  delete player.craftMods;
+  recalcMaxHp();
+  if (!player.maxHp || player.maxHp <= 0) player.maxHp = 20 + player.end * 6;
+  if (player.hp === undefined || player.hp <= 0) player.hp = Math.max(1, Math.floor(player.maxHp * 0.3));
+  if (player.hp > player.maxHp) player.hp = player.maxHp;
+}
+
+function todayKey() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+function pickDailyQuests() { var sh = DAILY_QUESTS_POOL.slice().sort(function() { return Math.random() - 0.5; }); return sh.slice(0, 3).map(function(q) { return q.id; }); }
+function checkDailyReset() {
+  var today = todayKey();
+  if (player.lastDailyReset !== today) {
+    player.lastDailyReset = today;
+    player.dailyProgress = { kills: 0, blocks: 0, dodges: 0, streak: 0, duelWins: 0, upgrades: 0, workShifts: 0, purchases: 0, crits: 0, heals: 0 };
+    player.dailyClaimed = [];
+    player.dailyQuests = pickDailyQuests();
+    addLog("<span class='heal'>📅 Новый день! Ежедневные квесты обновлены.</span>", "sys");
+  }
+}
+function timeTillMidnight() {
+  var now = new Date();
+  var m = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+  var diff = m - now;
+  return Math.floor(diff / 3600000) + "ч " + Math.floor((diff % 3600000) / 60000) + "м";
+}
+function tickHpRegen() {
+  if (!player || player.hp >= player.maxHp) return;
+  if (enemy !== null) return;
+  var now = Date.now();
+  var elapsed = now - player.lastHpRegen;
+  if (elapsed < HP_REGEN_INTERVAL) return;
+  var ticks = Math.floor(elapsed / HP_REGEN_INTERVAL);
+  var hpPct = player.hp / player.maxHp;
+  var mult = hpPct < 0.3 ? 1.5 : (hpPct > 0.7 ? 0.7 : 1.0);
+  var regen = Math.max(1, Math.floor(player.maxHp * HP_REGEN_PERCENT * mult * ticks));
+  player.hp = Math.min(player.maxHp, player.hp + regen);
+  player.lastHpRegen = now;
+  save();
+}
+function tickFatigue() {
+  if (!player || player.fatigue <= 0) return;
+  var now = Date.now();
+  var elapsed = now - player.lastFatigueTick;
+  if (elapsed < FATIGUE_RECOVER_INTERVAL) return;
+  var ticks = Math.floor(elapsed / FATIGUE_RECOVER_INTERVAL);
+  player.fatigue = Math.max(0, player.fatigue - ticks);
+  player.lastFatigueTick = now;
+  save();
+}
+function canClaimDailyReward() { return Date.now() - player.lastDailyReward >= 22 * 3600 * 1000; }
+function claimDailyReward() {
+  if (!canClaimDailyReward()) return;
+  var reward = getDailyReward(player.level);
+  player.money += reward;
+  player.lastDailyReward = Date.now();
+  addLog("<span class='heal'>🎁 Ежедневная награда: +" + reward + " монет!</span>", "heal");
+  save(); renderHome();
+}
+
+function startWork(type) {
+  if (player.workShift) { alert("У тебя уже активна смена! Дождись её окончания."); return; }
+  var hours = type === "short" ? 4 : (type === "medium" ? 6 : 8);
+  player.workShift = type;
+  player.workEndTime = Date.now() + hours * 3600 * 1000;
+  addLog("💼 <span class='heal'>Ты отправился на работу! Смена: " + hours + " часов.</span>", "heal");
+  save(); renderHome();
+}
+function collectWork() {
+  if (!player.workShift) return;
+  if (Date.now() < player.workEndTime) { alert("Смена ещё не закончилась! Подожди."); return; }
+  var rewards = { short: [10, 20], medium: [25, 40], long: [40, 60] };
+  var range = rewards[player.workShift];
+  var reward = range[0] + Math.floor(Math.random() * (range[1] - range[0] + 1));
+  player.money += reward;
+  addLog("💰 <span class='heal'>Смена завершена! Получено: " + reward + " монет.</span>", "heal");
+  player.workShift = null;
+  player.workEndTime = 0;
+  player.dailyProgress.workShifts = (player.dailyProgress.workShifts || 0) + 1;
+  save(); renderHome();
+}
+function getWorkTimeLeft() {
+  if (!player.workShift || !player.workEndTime) return 0;
+  return Math.max(0, player.workEndTime - Date.now());
+}
+function formatWorkTime(ms) {
+  var hours = Math.floor(ms / 3600000);
+  var minutes = Math.floor((ms % 3600000) / 60000);
+  return hours + "ч " + minutes + "м";
+}
+
+/* Таймер хода */
+function resetTurnDeadline() { turnDeadline = Date.now() + TURN_TIMEOUT; }
+function updateTurnTimer() {
+  var el = document.getElementById("turnTimer");
+  if (!el) return;
+  if (!enemy) { el.textContent = ""; return; }
+  var rem = Math.max(0, turnDeadline - Date.now());
+  var m = Math.floor(rem / 60000), s = Math.floor((rem % 60000) / 1000);
+  el.textContent = "⏳ до пропуска хода: " + m + ":" + two(s);
+  el.className = "turn-timer" + (rem < 30000 ? " warn" : "");
+}
+function timeoutSkip() {
+  if (!enemy || player.hp <= 0) return;
+  battleRounds++;
+  addLog("⏳ <span class='dmg'>Время вышло! " + fighterName(player) + " пропускает ход (без атаки и блока).</span>", "sys");
+  attackZones = []; blockZones = [];
+  if (skillState && skillState.eStun) {
+    skillState.eStun = false;
+    addLog("😵 <span class='heal'>Враг оглушён! Он тоже пропускает ход!</span>", "heal");
+  } else {
+    tryEnemySkill();
+    if (enemy && enemy.hp > 0) {
+      combatState.punishNextHit = PVP_PUNISH_MULT;
+      strike(enemy, player, randomZone(), []);
+    }
+  }
+  if (player.hp <= 0) { defeat(); return; }
+  renderBattleScreen();
+  resetTurnDeadline();
+  save();
+}
+
+setInterval(function() {
+  if (!player) return;
+  checkDailyReset();
+  tickHpRegen();
+  tickFatigue();
+  if (currentTab === "home") renderHome();
+}, 5000);
+
+setInterval(function() {
+  if (!player || currentTab !== "fight" || !enemy) return;
+  updateTurnTimer();
+  if (Date.now() >= turnDeadline) timeoutSkip();
+}, 1000);
+
+function pushHistory(result) {
+  if (!player.battleHistory) player.battleHistory = [];
+  player.battleHistory.unshift({
+    ts: Date.now(),
+    type: isDuel ? "duel" : "battle",
+    enemy: enemy ? esc(enemy.name) : "—",
+    result: result,
+    rounds: battleRounds,
+    events: battleEvents.slice(-80)
+  });
+  if (player.battleHistory.length > 50) player.battleHistory.length = 50;
+}
+function showHistory() {
+  var h = player.battleHistory || [];
+  var html = "";
+  if (h.length === 0) html = "<p style='color:#9a8a68'>Боёв ещё не было. Вперёд на арену!</p>";
+  var lastDay = "";
+  h.forEach(function(b) {
+    var d = new Date(b.ts);
+    var day = d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+    if (day !== lastDay) { html += "<div class='hist-day'>─── " + day + " ───</div>"; lastDay = day; }
+    var time = d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    var res = b.result === "win" ? "<span style='color:#7ab648;font-weight:bold'>ПОБЕДА</span>" : "<span style='color:#e07020;font-weight:bold'>ПОРАЖЕНИЕ</span>";
+    var icon = b.type === "duel" ? "⚔ Дуэль" : "🗡 Бой";
+    html += "<details class='hist-entry'><summary>" + time + " · " + icon + ": <b>" + b.enemy + "</b> — " + res + " (" + b.rounds + " раундов)</summary><div class='hist-events'>" + b.events.join("<br>") + "</div></details>";
+  });
+  document.getElementById("historyContent").innerHTML = html;
+  document.getElementById("historyOverlay").classList.remove("hidden");
+}
+function closeHistory(e) { if (e.target === document.getElementById("historyOverlay")) document.getElementById("historyOverlay").classList.add("hidden"); }
+function closeHistoryForce() { document.getElementById("historyOverlay").classList.add("hidden"); }
+
+function showXpTable() {
+  var html = "<table class='xp-table'><tr><th>Ур.</th><th>Ап</th><th>Порог XP</th><th>Награда</th></tr>";
+  for (var i = 0; i <= MAX_LEVEL; i++) {
+    var xpArr = XP_TABLE[i];
+    var rewArr = AP_REWARDS[i] || [];
+    for (var j = 0; j < xpArr.length; j++) {
+      var isCurrent = player && player.level === i && player.ap === j;
+      var rew = rewArr[j] || 0;
+      var rewText;
+      if (i === MAX_LEVEL && j === 0) rewText = "<b style='color:#c9a227'>MAX</b>";
+      else if (rew > 0) rewText = "<span style='color:#7ab648;font-weight:bold'>+" + rew + "</span>";
+      else rewText = "<span class='empty-ap'>—</span>";
+      var apLabel = j === 0 ? "<b>0</b> <span style='color:#9a8a68;font-size:10px'>(вход)</span>" : j;
+      html += "<tr class='" + (isCurrent ? "current-row" : "") + "'><td>" + i + "</td><td>" + apLabel + "</td><td>" + xpArr[j].toLocaleString() + "</td><td>" + rewText + "</td></tr>";
+    }
+  }
+  html += "</table>";
+  document.getElementById("xpTableContent").innerHTML = html;
+  document.getElementById("xpTableOverlay").classList.remove("hidden");
+}
+function closeXpTable(e) { if (e.target === document.getElementById("xpTableOverlay")) document.getElementById("xpTableOverlay").classList.add("hidden"); }
+function closeXpTableForce() { document.getElementById("xpTableOverlay").classList.add("hidden"); }
+
+function renderResetSection() {
+  var section = document.getElementById("resetSection");
+  var cost = getResetCost(player.resetCount);
+  var isFree = player.resetCount < FREE_RESETS;
+  var freeLeft = Math.max(0, FREE_RESETS - player.resetCount);
+  var costText = isFree ? "<span class='free'>Бесплатно</span> (осталось: " + freeLeft + ")" : "<span class='paid'>" + cost + " монет</span>";
+  section.innerHTML = "<div class='reset-panel'><h3>🔄 Сброс характеристик</h3><div class='reset-cost'>Стоимость: " + costText + "</div><div class='reset-info'>Всего сбросов: " + player.resetCount + "</div><button onclick='openResetModal()'>Сбросить характеристики</button></div>";
+}
+function openResetModal() {
+  var cost = getResetCost(player.resetCount);
+  var isFree = player.resetCount < FREE_RESETS;
+  if (!isFree && player.money < cost) { alert("Не хватает монет!"); return; }
+  resetStats = { str: 1, agi: 1, intu: 1, end: 1 };
+  resetLeft = 12 + player.totalEarned;
+  renderResetDistribute();
+  document.getElementById("resetOverlay").classList.remove("hidden");
+}
+function renderResetDistribute() {
+  var block = document.getElementById("resetDistributeBlock");
+  block.innerHTML = "";
+  STAT_KEYS.forEach(function(k) {
+    var row = document.createElement("div");
+    row.className = "stat-row";
+    var mb = document.createElement("button"); mb.className = "stat-btn"; mb.textContent = "−"; mb.disabled = (resetStats[k] <= 1);
+    mb.onclick = function() { if (resetStats[k] > 1) { resetStats[k]--; resetLeft++; renderResetDistribute(); } };
+    var pb = document.createElement("button"); pb.className = "stat-btn"; pb.textContent = "+"; pb.disabled = (resetLeft <= 0);
+    pb.onclick = function() { if (resetLeft > 0) { resetStats[k]++; resetLeft--; renderResetDistribute(); } };
+    var label = document.createElement("span"); label.textContent = STAT_NAMES[k] + ": ";
+    var val = document.createElement("span"); val.className = "val"; val.textContent = resetStats[k];
+    row.appendChild(label); row.appendChild(mb); row.appendChild(val); row.appendChild(pb);
+    block.appendChild(row);
+  });
+  document.getElementById("resetPointsLeft").textContent = resetLeft;
+  document.getElementById("resetConfirmBtn").disabled = (resetLeft > 0);
+}
+function confirmReset() {
+  if (resetLeft > 0) { alert("Распредели все очки!"); return; }
+  var cost = getResetCost(player.resetCount);
+  var isFree = player.resetCount < FREE_RESETS;
+  if (!isFree) { if (player.money < cost) { alert("Не хватает монет!"); return; } player.money -= cost; }
+  player.resetCount++;
+  player.str = resetStats.str; player.agi = resetStats.agi; player.intu = resetStats.intu; player.end = resetStats.end;
+  player.freePoints = 0;
+  recalcMaxHp();
+  player.hp = Math.min(player.hp, player.maxHp);
+  save(); closeResetModalForce(); renderHome(); renderShop();
+}
+function closeResetModal(e) { if (e.target === document.getElementById("resetOverlay")) document.getElementById("resetOverlay").classList.add("hidden"); }
+function closeResetModalForce() { document.getElementById("resetOverlay").classList.add("hidden"); }
+
+var selectedAvatar = null;
+
+function openCreateModal() {
+  newStats = { str: 1, agi: 1, intu: 1, end: 1 };
+  left = 12;
+  selectedAvatar = null;
+  document.getElementById("nameInput").value = "";
+  document.getElementById("ageInput").value = "25";
+  document.getElementById("genderInput").value = "М";
+  renderCreateStats();
+  renderCreateAvatars();
+  document.getElementById("createOverlay").classList.remove("hidden");
+}
+
+function renderCreateAvatars() {
+  var box = document.getElementById("avatarBlock");
+  if (!box) return;
+  var gender = document.getElementById("genderInput").value;
+  var list = (gender === "Ж") ? FEMALE_AVATARS : MALE_AVATARS;
+  if (!selectedAvatar || list.indexOf(selectedAvatar) < 0) {
+    selectedAvatar = list[0];
+  }
+  var html = "";
+  list.forEach(function(url) {
+    var isSel = (url === selectedAvatar);
+    html += "<img src='" + url + "' onclick='selectAvatar(\"" + url + "\")' " +
+      "style='width:60px;height:60px;border-radius:6px;cursor:pointer;" +
+      "border:2px solid " + (isSel ? "#c9a227" : "#5a4630") + ";" +
+      "background:#120e0a;padding:2px;' />";
+  });
+  box.innerHTML = html;
+}
+
+function selectAvatar(url) {
+  selectedAvatar = url;
+  renderCreateAvatars();
+}
+function renderCreateStats() {
+  var block = document.getElementById("statsBlock");
+  block.innerHTML = "";
+  STAT_KEYS.forEach(function(k) {
+    var row = document.createElement("div");
+    row.className = "stat-row";
+    var mb = document.createElement("button"); mb.className = "stat-btn"; mb.textContent = "−"; mb.disabled = (newStats[k] <= 1);
+    mb.onclick = function() { if (newStats[k] > 1) { newStats[k]--; left++; renderCreateStats(); } };
+    var pb = document.createElement("button"); pb.className = "stat-btn"; pb.textContent = "+"; pb.disabled = (left <= 0);
+    pb.onclick = function() { if (left > 0) { newStats[k]++; left--; renderCreateStats(); } };
+    var label = document.createElement("span"); label.textContent = STAT_NAMES[k] + ": ";
+    var val = document.createElement("span"); val.className = "val"; val.textContent = newStats[k];
+    row.appendChild(label); row.appendChild(mb); row.appendChild(val); row.appendChild(pb);
+    block.appendChild(row);
+  });
+  document.getElementById("pointsLeft").textContent = left;
+}
+document.getElementById("createBtn").onclick = function() {
+  var name = document.getElementById("nameInput").value.trim();
+  var gender = document.getElementById("genderInput").value;
+  var age = parseInt(document.getElementById("ageInput").value) || 25;
+  if (age < 14) age = 14; if (age > 99) age = 99;
+  if (!name) { alert("Введи имя."); return; }
+  if (left > 0) { alert("Распредели все очки."); return; }
+  if (player && player.name && !confirm("Удалить персонажа «" + player.name + "»?")) return;
+  var chosenAvatar = selectedAvatar || (gender === "Ж" ? FEMALE_AVATARS[0] : MALE_AVATARS[0]);
+  player = {
+    name: name, gender: gender, age: age,
+    avatarUrl: chosenAvatar,
+    str: newStats.str, agi: newStats.agi, intu: newStats.intu, end: newStats.end,
+    level: 0, ap: 0, exp: 0, freePoints: 0, totalEarned: 0,
+    money: 30, wins: 0, losses: 0,
+    inventory: [], equipment: {},
+    potions: {}, scrolls: {}, durability: {}, upgrades: {},
+    questProgress: { kills: 0, buys: 0 }, questsClaimed: [],
+    resetCount: 0, fatigue: 0, lastFatigueTick: Date.now(),
+    lastHpRegen: Date.now(), lastDailyReward: 0,
+    dailyProgress: { kills: 0, blocks: 0, dodges: 0, streak: 0 },
+    dailyClaimed: [], lastDailyReset: todayKey(), dailyQuests: pickDailyQuests(),
+    battleHistory: [],
+    workShift: null, workEndTime: 0,
+    workDayCount: { short: 0, medium: 0, long: 0 },
+    workResetTime: Date.now() + 2 * 24 * 3600 * 1000
+  };
+  player.maxHp = 20 + player.end * 6;
+  player.hp = player.maxHp;
+  ensureFields();
+  save(); closeCreateModalForce();
+  enemy = null; isDuel = false; skillState = null; combatState = { dodgeBoost: 0 };
+  battleRecording = false; battleEvents = []; battleRounds = 0;
+  renderBattleScreen(); renderHome();
+  switchTab("home");
+};
+function closeCreateModal(e) { if (e.target === document.getElementById("createOverlay")) document.getElementById("createOverlay").classList.add("hidden"); }
+function closeCreateModalForce() { document.getElementById("createOverlay").classList.add("hidden"); }
+
+function switchTab(tab) {
+  document.querySelectorAll(".tab").forEach(function(x) { x.classList.toggle("active", x.dataset.tab === tab); });
+  currentTab = tab;
+  document.querySelectorAll("#game > .panel").forEach(function(p) { p.classList.add("hidden"); });
+  document.getElementById(tab).classList.remove("hidden");
+  renderTab();
+}
+function switchQuestTab(tab) {
+  currentQuestTab = tab;
+  document.querySelectorAll(".quest-tab").forEach(function(t) {
+    t.classList.toggle("active", t.dataset.questTab === tab);
+  });
+  ["daily", "main", "location", "done"].forEach(function(k) {
+    var p = document.getElementById("questTab_" + k);
+    if (p) p.classList.toggle("hidden", k !== tab);
+  });
+}
+
+function showPlayerCard() {
+  if (!player) return;
+  var tf = player.wins + player.losses;
+  var wr = tf > 0 ? Math.round(player.wins / tf * 100) : 0;
+  var isMax = player.level >= MAX_LEVEL;
+  document.getElementById("modalAvatar").src = getPlayerAvatar();
+  document.getElementById("modalName").textContent = player.name;
+  var equipHtml = "";
+  SLOTS.forEach(function(s) {
+    var inst = player.equipment ? player.equipment[s] : null;
+    var d = inst ? getTemplate(inst.id) : null;
+    var durStr = "";
+    if (d && inst) {
+      var maxDur = getMaxDurability(d);
+      var curDur = inst.dur !== undefined ? inst.dur : maxDur;
+      var lv = inst.upg || 0;
+      var cLv = inst.craft || 0;
+      var crTxt = (s !== "weapon" && cLv > 0) ? " [Крафт +" + cLv + "/3]" : "";
+      durStr = " [" + curDur + "/" + maxDur + "]" + (lv > 0 ? " +" + lv : "") + crTxt;
+    }
+    equipHtml += "<div class='modal-equip-item'>" + SLOT_NAMES[s] + ": " + (d ? "<span>" + d.name + "</span>" + durStr : "<span style='color:#555'>пусто</span>") + "</div>";
+  });
+  var cs = getFullCombatStats();
+  var fl = getFatigueLevel();
+  var buildNames = { crit: "🗡️ Крит", dodge: "🏃 Ловкач", tank: "🛡️ Танк" };
+  var w = getEquippedWeapon();
+  var wr = getWeaponRange(player);
+  document.getElementById("modalStats").innerHTML =
+    "<div class='modal-stat'><span class='label'>Пол</span><span class='value'>" + (player.gender === "Ж" ? "👩" : "👨") + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Возраст</span><span class='value'>" + player.age + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Уровень</span><span class='value" + (isMax ? " max-level" : "") + "'>" + player.level + " · ап " + player.ap + (isMax ? " MAX" : "") + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Билд</span><span class='value'>" + buildNames[getPlayerBuild()] + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>HP</span><span class='value'>" + player.hp + " / " + player.maxHp + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Усталость</span><span class='value'>" + fl.emoji + " " + fl.name + " (" + player.fatigue + "%)</span></div>" +
+    "<div class='modal-stat'><span class='label'>Оружие</span><span class='value'>" + (w ? wr.min + "-" + wr.max + ((getTemplate(w.id) || {}).twoHand ? " (2Р)" : "") : "кулаки 1-2") + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Свободные очки</span><span class='value'>" + player.freePoints + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Сила</span><span class='value'>" + player.str + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Ловкость</span><span class='value'>" + player.agi + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Интуиция</span><span class='value'>" + player.intu + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Выносливость</span><span class='value'>" + player.end + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>💥 Крит</span><span class='value' style='color:#e07020'>" + cs.crit.toFixed(1) + "% (x" + cs.critMult.toFixed(2) + ")</span></div>" +
+    "<div class='modal-stat'><span class='label'>🎯 Бонус урона</span><span class='value' style='color:#e07020'>+" + cs.dmgBonus + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>🗡️ Пробитие брони</span><span class='value' style='color:#ff9900'>" + cs.armorPierce + "%</span></div>" +
+    "<div class='modal-stat'><span class='label'>🛡 Парирование</span><span class='value' style='color:#7ab648'>" + cs.parry + "%</span></div>" +
+    "<div class='modal-stat'><span class='label'>🔰 Снижение урона</span><span class='value'>−" + cs.dmgReduction + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>💨 Уворот</span><span class='value' style='color:#7ab648'>" + cs.dodge.toFixed(1) + "%</span></div>" +
+    "<div class='modal-stat'><span class='label'>⚡ Контрудар</span><span class='value' style='color:#b380e0'>" + cs.counter.toFixed(1) + "%</span></div>" +
+    "<div class='modal-stat'><span class='label'>🛡 Блок</span><span class='value'>" + cs.block.toFixed(1) + "%</span></div>" +
+    "<div class='modal-stat'><span class='label'>Побед / Поражений</span><span class='value'>" + player.wins + " / " + player.losses + " (" + wr + "%)</span></div>" +
+    "<div class='modal-stat'><span class='label'>Монеты</span><span class='value' style='color:#c9a227'>" + player.money + "</span></div>";
+  var za = cs.zoneArmor || { head: 0, chest: 0, belly: 0, belt: 0, legs: 0 };
+  var zoneHtml = "<div class='modal-section'><div class='modal-section-title'>🛡 Зонная броня</div>" +
+    "<div class='modal-stat'><span class='label'>Голова</span><span class='value'>−" + za.head + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Грудь</span><span class='value'>−" + za.chest + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Живот</span><span class='value'>−" + za.belly + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Пояс</span><span class='value'>−" + za.belt + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Ноги</span><span class='value'>−" + za.legs + "</span></div>" +
+    "</div>";
+  document.getElementById("modalEquipSection").innerHTML = "<div class='modal-section'><div class='modal-section-title'>Экипировка (13 слотов)</div>" + equipHtml + "</div>" + zoneHtml;
+  document.getElementById("modalOverlay").classList.remove("hidden");
+}
+function showEnemyCard() {
+  if (!enemy) return;
+  var age = ENEMY_AGES[enemy.name] || 25;
+  var gender = ENEMY_GENDERS[enemy.name] || "М";
+  document.getElementById("modalAvatar").src = getBotAvatar(enemy.name, gender);
+  document.getElementById("modalName").textContent = enemy.name;
+  var statsHtml =
+    "<div class='modal-stat'><span class='label'>Пол</span><span class='value'>" + (gender === "Ж" ? "👩" : "👨") + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Возраст</span><span class='value'>" + age + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>HP</span><span class='value'>" + Math.max(0, enemy.hp) + "/" + enemy.maxHp + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Урон</span><span class='value'>" + (enemy.dmgMin || 1) + "-" + (enemy.dmgMax || 2) + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Сила</span><span class='value'>" + enemy.str + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Ловкость</span><span class='value'>" + enemy.agi + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Интуиция</span><span class='value'>" + enemy.intu + "</span></div>" +
+    "<div class='modal-stat'><span class='label'>Выносливость</span><span class='value'>" + enemy.end + "</span></div>";
+  if (isDuel) statsHtml += "<div class='modal-stat'><span class='label'>Тип</span><span class='value' style='color:#b380e0'>⚔ Дуэль (статы ×" + DUEL_STAT_MULT + ")</span></div>";
+  if (skillState) {
+    var bn = { crit: "🗡️ Крит", dodge: "🏃 Ловкач", tank: "🛡️ Танк" };
+    statsHtml += "<div class='modal-stat'><span class='label'>Билд</span><span class='value'>" + bn[skillState.eBuild] + "</span></div>";
+  }
+  document.getElementById("modalStats").innerHTML = statsHtml;
+  document.getElementById("modalEquipSection").innerHTML = "";
+  document.getElementById("modalOverlay").classList.remove("hidden");
+}
+function closeModal(e) { if (e.target === document.getElementById("modalOverlay")) document.getElementById("modalOverlay").classList.add("hidden"); }
+function closeModalForce() { document.getElementById("modalOverlay").classList.add("hidden"); }
+document.getElementById("pSide").onclick = function() { showPlayerCard(); };
+document.getElementById("eSide").onclick = function() { showEnemyCard(); };
+
+document.querySelectorAll(".tab").forEach(function(t) { t.onclick = function() { switchTab(t.dataset.tab); }; });
+document.querySelectorAll(".shop-tab").forEach(function(t) { t.onclick = function() { switchShopTab(t.dataset.shopTab); }; });
+function renderTab() {
+  if (!player) return;
+  if (currentTab === "home") renderHome();
+  if (currentTab === "fight") renderBattleScreen();
+  if (currentTab === "inv") renderInv();
+  if (currentTab === "equip") renderEquip();
+  if (currentTab === "forge") renderForge();
+  if (currentTab === "shop") renderShop();
+  if (currentTab === "quests") renderQuests();
+  if (currentTab === "online") renderOnline();
+  if (currentTab === "leaderboard") renderLeaderboard();
+}
+
+function calcEquipBonusFromMap(equipMap) {
+  var b = {
+    agi: 0, intu: 0, str: 0, end: 0,
+    crit: 0, critDmg: 0, dodge: 0, counter: 0, block: 0,
+    antiCrit: 0, antiDodge: 0, hpFlat: 0,
+    dmgBonus: 0, armorPierce: 0, parry: 0, dmgReduction: 0,
+    zoneArmor: { head: 0, chest: 0, belly: 0, belt: 0, legs: 0 }
+  };
+  if (!equipMap) return b;
+  SLOTS.forEach(function(s) {
+    var inst = equipMap[s];
+    if (!inst) return;
+    var item = getTemplate(inst.id);
+    if (!item) return;
+    if (inst.dur !== undefined && inst.dur <= 0) return;
+    var mult = (s === "weapon") ? getInstUpgMult(inst) : getInstCraftMult(inst);
+    var bon = item.bonus;
+    if (bon) {
+      if (bon.str) b.str += Math.round(bon.str * mult);
+      if (bon.agi) b.agi += Math.round(bon.agi * mult);
+      if (bon.intu) b.intu += Math.round(bon.intu * mult);
+      if (bon.end) b.end += Math.round(bon.end * mult);
+      if (bon.crit) b.crit += bon.crit * mult;
+      if (bon.critDmg) b.critDmg += bon.critDmg * mult;
+      if (bon.dodge) b.dodge += bon.dodge * mult;
+      if (bon.counter) b.counter += bon.counter * mult;
+      if (bon.block) b.block += bon.block * mult;
+      if (bon.antiCrit) b.antiCrit += bon.antiCrit * mult;
+      if (bon.antiDodge) b.antiDodge += bon.antiDodge * mult;
+      if (bon.hpFlat) b.hpFlat += Math.round(bon.hpFlat * mult);
+      if (bon.dmgBonus) b.dmgBonus += Math.round(bon.dmgBonus * mult);
+      if (bon.armorPierce) b.armorPierce += bon.armorPierce * mult;
+      if (bon.parry) b.parry += bon.parry * mult;
+      if (bon.dmgReduction) b.dmgReduction += Math.round(bon.dmgReduction * mult);
+    }
+    if (item.zoneArmor) {
+      for (var z in item.zoneArmor) {
+        if (b.zoneArmor[z] === undefined) b.zoneArmor[z] = 0;
+        b.zoneArmor[z] += item.zoneArmor[z];
+      }
+    }
+  });
+  return b;
+}
+
+function getEquipBonus() {
+  return calcEquipBonusFromMap(player.equipment);
+}
+function getFullCombatStats() {
+  var eb = getEquipBonus();
+  var w = getEquippedWeapon();
+  var effStr = player.str + eb.str;
+  var effAgi = player.agi + eb.agi;
+  var effIntu = player.intu + eb.intu;
+  var effEnd = player.end + eb.end;
+  var wr = getWeaponRange(player);
+  var dmgMin = wr.min + Math.floor(effStr * 0.3);
+  var dmgMax = wr.max + Math.floor(effStr * 0.3);
+  var crit = Math.min(55, effIntu * 0.4 + Math.floor(eb.crit / 10));
+  var critMult = Math.min(3.0, 1.5 + effIntu * 0.02 + eb.critDmg);
+  var dodge = Math.min(45, effAgi * 0.3 + Math.floor(eb.dodge / 10));
+  var counter = Math.min(25, effAgi * 0.3 + Math.floor(eb.counter / 3));
+  var block = Math.min(50, effEnd * 0.5 + Math.floor(eb.block / 3));
+  var antiCrit = Math.min(40, effEnd * 0.3 + Math.floor(eb.antiCrit / 10));
+  var antiDodge = Math.min(40, effIntu * 0.3 + Math.floor(eb.antiDodge / 10));
+  var maxHp = 20 + effEnd * 6 + eb.hpFlat;
+  return {
+    dmgMin: dmgMin, dmgMax: dmgMax,
+    crit: crit, critMult: critMult,
+    dodge: dodge, counter: counter, block: block,
+    antiCrit: antiCrit, antiDodge: antiDodge, maxHp: maxHp,
+    dmgBonus: eb.dmgBonus, armorPierce: eb.armorPierce,
+    parry: eb.parry, dmgReduction: eb.dmgReduction,
+    zoneArmor: eb.zoneArmor
+  };
+}
+function durColor(cur, max) {
+  var pct = cur / max;
+  if (cur <= 0) return "dur-broken";
+  if (pct < 0.25) return "dur-crit";
+  if (pct < 0.5) return "dur-warn";
+  return "dur-ok";
+}
+function fighterName(f) {
+  if (f === player) return "<b style='color:#c9a227'>" + esc(player.name) + "</b>";
+  return "<b style='color:#e07020'>" + esc(f.name) + "</b>";
+}
+
+/* === БОЕВОЙ ЭКРАН === */
+function dollHtml(equipMap, seed, dim, avatarUrl) {
+  var pos = {
+    earring: [1, 1], head: [1, 2], amulet: [1, 3],
+    weapon: [3, 1], shield: [3, 3],
+    chest: [4, 1], bracers: [4, 3],
+    wrists: [5, 1], belt: [5, 2], ring1: [5, 3],
+    legs: [6, 1], greaves: [6, 2], ring2: [6, 3]
+  };
+  if (!avatarUrl) {
+    avatarUrl = "https://api.dicebear.com/7.x/pixel-art/svg?seed=" + encodeURIComponent(seed);
+  }
+
+  function qualityClass(item) {
+    if (!item) return "";
+    if (item.price >= 100) return "legendary";
+    if (item.price >= 60) return "epic";
+    if (item.price >= 30) return "rare";
+    return "common";
+  }
+
+  var html = "<div class='doll'>";
+  html += "<div class='avatar' style='grid-column:2;grid-row:2/5;" + (dim ? "opacity:.3;" : "") + "'>";
+  html += "<img src='" + avatarUrl + "' alt=''>";
+  html += "</div>";
+
+  for (var s in pos) {
+    var inst = equipMap && equipMap[s];
+    var item = inst ? getTemplate(inst.id) : null;
+    var broken = inst && inst.dur !== undefined && inst.dur <= 0;
+    var cls = "slot";
+    if (item) cls += " filled " + qualityClass(item);
+    if (broken) cls += " broken";
+
+    var title = item
+      ? item.name + (broken ? " (СЛОМАНО)" : "")
+      : SLOT_NAMES[s] + ": пусто";
+
+    var content = item ? (broken ? "X" : SLOT_EMOJI[s]) : "<span style='opacity:.22'>" + SLOT_EMOJI[s] + "</span>";
+
+    var badge = "";
+    if (inst) {
+      var upg = inst.upg || 0;
+      var craft = inst.craft || 0;
+      if (s === "weapon" && upg > 0) {
+        badge = "<span class='badge upg'>+" + upg + "</span>";
+      } else if (s !== "weapon" && craft > 0) {
+        badge = "<span class='badge'>+" + craft + "</span>";
+      }
+    }
+
+    html += "<div class='" + cls + "' title='" + title + "' style='grid-column:" + pos[s][1] + ";grid-row:" + pos[s][0] + ";'>" + content + badge + "</div>";
+  }
+  html += "</div>";
+  return html;
+}
+function statsSideHtml(who) {
+  if (who === "player") {
+    var eb = getEquipBonus();
+    return STAT_KEYS.map(function(k) {
+      var base = player[k], bon = eb[k] || 0;
+      return STAT_NAMES[k] + ": <b>" + (base + bon) + "</b> " + (bon > 0 ? "<span class='bonus'>(" + base + "+" + bon + ")</span>" : "<span class='zero'>(" + base + "+0)</span>");
+    }).join("<br>");
+  }
+  if (!enemy) return "";
+  return STAT_KEYS.map(function(k) { return STAT_NAMES[k] + ": <b>" + enemy[k] + "</b> <span class='zero'>(" + enemy[k] + "+0)</span>"; }).join("<br>");
+}
+function maxAttackZones() {
+  // Пока у нас одна рука — один удар. Система двух рук — отдельный патч.
+  return 1;
+}
+
+function pickAttack(z) {
+  var i = attackZones.indexOf(z);
+  if (i >= 0) attackZones.splice(i, 1);
+  else if (attackZones.length < maxAttackZones()) attackZones.push(z);
+  renderCenter();
+  updateFightBtn();
+}
+function toggleBlockZone(z) {
+  var i = blockZones.indexOf(z);
+  if (i >= 0) blockZones.splice(i, 1);
+  else if (blockZones.length < maxBlockZones()) blockZones.push(z);
+  renderCenter();
+  updateFightBtn();
+}
+function updateFightBtn() {
+  document.getElementById("fightBtn").disabled = !(
+    attackZones.length === maxAttackZones() &&
+    blockZones.length === maxBlockZones()
+  );
+}
+function renderLocationTabs() {
+  var box = document.getElementById("locationTabs");
+  if (!box) return;
+  var html = "";
+  LOCATIONS.forEach(function(loc) {
+    var locked = player.level < loc.minLevel;
+    var active = currentLocation === loc.id;
+    html += "<div class='shop-tab" + (active ? " active" : "") + "' style='" + (locked ? "opacity:.4;cursor:not-allowed;" : "") + "' onclick='" + (locked ? "" : "switchLocation(\"" + loc.id + "\")") + "'>" + loc.name + (locked ? " 🔒" + loc.minLevel : "") + "</div>";
+  });
+  box.innerHTML = html;
+}
+function switchLocation(id) {
+  if (enemy) { alert("Сначала закончи текущий бой!"); return; }
+  var loc = LOCATIONS.find(function(l) { return l.id === id; });
+  if (!loc || player.level < loc.minLevel) return;
+  currentLocation = id;
+  renderLocationTabs();
+  renderBattleScreen();   // <-- перерисовываем, чтобы обновить видимость кнопки «Дуэль»
+}
+function renderCenter() {
+  var c = document.getElementById("centerCol");
+  if (!enemy) {
+    c.innerHTML = "<div class='turn-indicator'>АРЕНА ОЖИДАЕТ</div><div class='turn-timer'>Найди противника или вызови соперника на дуэль</div>";
+    return;
+  }
+  var mz = maxBlockZones();
+  var ma = maxAttackZones();
+  var atkHtml = ZONES.map(function(z) {
+    var active = attackZones.indexOf(z) >= 0;
+    return "<button type='button' class='zone-btn" + (active ? " active" : "") + "' onclick='pickAttack(\"" + z + "\")'>в " + z + "</button>";
+  }).join("");
+  var blkHtml = ZONES.map(function(z) {
+    var active = blockZones.indexOf(z) >= 0;
+    return "<button type='button' class='zone-btn" + (active ? " active" : "") + "' onclick='toggleBlockZone(\"" + z + "\")'>" + z + "</button>";
+  }).join("");
+  c.innerHTML =
+    "<div class='turn-indicator'>ДЕЛАЙТЕ ВАШ ХОД</div>" +
+    "<div class='turn-timer' id='turnTimer'>⏳ --:--</div>" +
+    "<div id='skillPanel' class='hidden'></div>" +
+    "<div class='cols-2'>" +
+    "<div><div class='zone-title'>⚔ Удар:</div><div class='zone-btns'>" + atkHtml + "</div></div>" +
+    "<div><div class='zone-title'>🛡 Защита (" + mz + " из 5)</div><div class='zone-btns'>" + blkHtml + "</div></div>" +
+    "</div>";
+  renderSkillPanel();
+  updateTurnTimer();
+  updateFightBtn();
+}
+function renderBattleScreen() {
+  if (!player) return;
+  tickHpRegen();
+  renderLocationTabs();
+  document.getElementById("pHeader").innerHTML = "<span style='color:#c9a227'>" + esc(player.name) + "</span> [" + player.level + "] <span class='hp-num'>(" + player.hp + "/" + player.maxHp + ")</span>";
+  document.getElementById("pHpBar").style.width = Math.max(0, player.hp / player.maxHp * 100) + "%";
+  document.getElementById("pHpText").textContent = player.hp + "/" + player.maxHp;
+  document.getElementById("pDoll").innerHTML = dollHtml(player.equipment, player.name, false, getPlayerAvatar());
+  document.getElementById("pStats").innerHTML = statsSideHtml("player");
+  document.getElementById("pSide").className = "fighter-side active";
+
+  var eSide = document.getElementById("eSide");
+  if (enemy) {
+    eSide.className = "fighter-side active" + (isDuel ? " duel" : "") + (enemy.isElite ? " elite" : "") + (enemy.isBoss ? " boss" : "");
+    var headerBadges = "";
+    if (isDuel) headerBadges += "<span class='duel-badge'>⚔ PVP</span> ";
+    if (enemy.isBoss) headerBadges += "<span class='boss-badge'>👑 БОСС</span> ";
+    if (enemy.isElite) headerBadges += "<span class='elite-badge'>⭐ ЭЛИТА</span> ";
+    document.getElementById("eHeader").innerHTML = (headerBadges ? headerBadges + "<br>" : "") + "<span style='color:#e07020'>" + esc(enemy.name) + "</span> [" + player.level + "] <span class='hp-num'>(" + Math.max(0, enemy.hp) + "/" + enemy.maxHp + ")</span>";
+    document.getElementById("eHpBar").style.width = Math.max(0, enemy.hp / enemy.maxHp * 100) + "%";
+    document.getElementById("eHpText").textContent = Math.max(0, enemy.hp) + "/" + enemy.maxHp;
+    var eEquip = enemy.bossEquipment || enemy.equipMap || (isDuel ? player.equipment : null);
+    var eG = ENEMY_GENDERS[enemy.name] || "М";
+    document.getElementById("eDoll").innerHTML = dollHtml(eEquip, enemy.name, false, getBotAvatar(enemy.name, eG));
+    document.getElementById("eStats").innerHTML = statsSideHtml("enemy");
+  } else {
+    eSide.className = "fighter-side";
+    document.getElementById("eHeader").innerHTML = "<span style='color:#9a8a68'>— нет —</span>";
+    document.getElementById("eHpBar").style.width = "0%";
+    document.getElementById("eHpText").textContent = "";
+    document.getElementById("eDoll").innerHTML = dollHtml(null, "empty", true);
+    document.getElementById("eStats").innerHTML = "";
+  }
+  renderCenter();
+  var duelBtn = document.getElementById("duelBtn");
+  var newEnemyBtn = document.getElementById("newEnemyBtn");
+  var isArena = (currentLocation === "arena");
+  var isBossLoc = (!!getBossConfig(currentLocation));
+
+  if (enemy) {
+    document.getElementById("fightBtn").classList.remove("hidden");
+    newEnemyBtn.classList.add("hidden");
+    duelBtn.classList.add("hidden");
+    duelBtn.disabled = true;
+    duelBtn.title = "";
+  } else {
+    document.getElementById("fightBtn").classList.add("hidden");
+    newEnemyBtn.classList.remove("hidden");
+
+    if (isBossLoc) {
+      var bossCfg = getBossConfig(currentLocation);
+      var cdUntil = (player.bossCooldowns && player.bossCooldowns[currentLocation]) || 0;
+      var left = cdUntil - Date.now();
+      var shortName = bossCfg ? bossCfg.name.replace(/^👑\s*/, "") : "Босс";
+      if (left > 0) {
+        var hh = Math.floor(left / 3600000);
+        var mm = Math.floor((left % 3600000) / 60000);
+        newEnemyBtn.textContent = "⏳ " + shortName + " восстанавливается (" + hh + "ч " + mm + "м)";
+        newEnemyBtn.disabled = true;
+      } else {
+        newEnemyBtn.textContent = "👑 Вызвать: " + shortName;
+        newEnemyBtn.disabled = false;
+      }
+    } else {
+      newEnemyBtn.textContent = "Найти противника";
+      newEnemyBtn.disabled = false;
+    }
+
+    if (isArena && player.level >= DUEL_MIN_LEVEL) {
+      duelBtn.classList.remove("hidden");
+      duelBtn.disabled = false;
+      duelBtn.title = "";
+    } else {
+      duelBtn.classList.add("hidden");
+      duelBtn.disabled = true;
+      duelBtn.title = "";
+    }
+    skillState = null;
+  }
+}
+function renderFightTop() { renderBattleScreen(); }
+
+function renderSkillPanel() {
+  var panel = document.getElementById("skillPanel");
+  if (!panel) return;
+  if (!skillState || !enemy) { panel.innerHTML = ""; panel.classList.add("hidden"); return; }
+  panel.classList.remove("hidden");
+  var build = skillState.build;
+  var skills = SKILLS[build];
+  var buildNames = { crit: "🗡️ Крит", dodge: "🏃 Ловкач", tank: "🛡️ Танк" };
+  var sel = skillState.selectedSkill;
+  var chargeHint = build === "crit" ? "Заряд: попадание +1, крит +1" : (build === "dodge" ? "Заряд: попадание +1, уворот +1" : "Заряд: попадание +1, блок +1");
+  var html = "<div style='background:#120e0a;border:1px solid #5a4630;padding:8px;border-radius:4px;'><div style='color:#c9a227;font-weight:bold;margin-bottom:6px;font-size:13px;'>⚡ Навыки (" + buildNames[build] + ")" + (sel !== null ? " — <span style='color:#7ab648'>выбран</span>" : "") + "</div>";
+  for (var i = 0; i < 3; i++) {
+    var sk = skills[i];
+    var charge = skillState.charges[i], target = skillState.targets[i];
+    var ready = charge >= target, isSelected = (sel === i);
+    var isInstant = (build === "crit" && i === 2) || (build === "tank" && (i === 1 || i === 2));
+    var barHtml = "";
+    for (var j = 0; j < target; j++) barHtml += (j < charge) ? "🟨" : "⬜";
+    var btnHtml = "";
+    if (isSelected) btnHtml = " <button class='skill-use-btn' style='background:#5a1a1a;border-color:#e07020;color:#e07020' onclick='usePlayerSkill(" + i + ")'>✖ ОТМЕНИТЬ</button>";
+    else if (ready && sel === null) btnHtml = " <button class='skill-use-btn' onclick='usePlayerSkill(" + i + ")'>ВЫБРАТЬ</button>";
+    else if (ready && sel !== null) btnHtml = " <span class='skill-wait'>🔒 другой</span>";
+    else btnHtml = " <span class='skill-wait'>⏳ копить</span>";
+    var rowStyle = isSelected ? "background:#2a3a1a;border:1px solid #7ab648;border-radius:3px;padding:4px 6px" : "";
+    html += "<div class='skill-row' style='" + rowStyle + "'><span>" + (isInstant ? "🔴 " : "🟢 ") + "<span class='sk-name'>" + sk.icon + " " + sk.name + "</span> <span class='sk-desc'>" + sk.desc + (isInstant ? " (ВМЕСТО удара)" : "") + "</span></span><span class='sk-charge'>" + barHtml + " " + charge + "/" + target + btnHtml + "</span></div>";
+  }
+  html += "<div style='color:#9a8a68;font-size:11px;margin-top:5px;'>🟢 Бафф | 🔴 Мгновенный | " + chargeHint + "</div></div>";
+  panel.innerHTML = html;
+}
+
+function renderHome() {
+  checkDailyReset();
+  var isMax = player.level >= MAX_LEVEL;
+  var base = XP_TABLE[player.level][player.ap];
+  var next = nextThreshold();
+  var xpPct = isMax ? 100 : Math.min(100, Math.floor((player.exp - base) / Math.max(1, next - base) * 100));
+  var isLastAp = !isMax && player.ap + 1 >= XP_TABLE[player.level].length;
+  var leftXp = isMax ? 0 : Math.max(0, next - player.exp);
+  var lvlText = isMax
+    ? "<span class='max-level'>⭐ Уровень " + player.level + " (MAX) ⭐</span>"
+    : "Уровень " + player.level + " · ап " + player.ap + "/" + (XP_TABLE[player.level].length - 1) + " | " + (isLastAp ? "до уровня" : "до апа") + ": " + leftXp.toLocaleString() + " XP";
+  var buildNames = { crit: "🗡️ Крит", dodge: "🏃 Ловкач", tank: "🛡️ Танк" };
+  var html = "<p><b>" + esc(player.name) + "</b> " + (player.gender === "Ж" ? "👩" : "👨") + " (возраст: " + player.age + ") | Билд: <b>" + buildNames[getPlayerBuild()] + "</b></p>" +
+    "<p>" + lvlText + " | 💰 <b>" + player.money + "</b></p>" +
+    "<div class='xpbar'><div style='width:" + xpPct + "%;background:" + (isMax ? "#7ab648" : "#c9a227") + "'></div></div>" +
+    "<p>❤️ HP: " + player.hp + "/" + player.maxHp + " <span style='color:#9a8a68;font-size:12px'>(реген 1%/10 сек вне боя)</span></p>" +
+    "<p>" + STAT_KEYS.map(function(k) { return STAT_NAMES[k] + ": " + player[k]; }).join(" | ") + "</p>";
+  html += "<p>Побед: " + player.wins + " | Поражений: " + player.losses + "</p>";
+  html += "<p style='color:#9a8a68;font-size:13px;'>🟫 Грубый материал: <b style='color:#d8c9a3'>" + player.materials.t1 + "</b> | 🔷 Редкий материал: <b style='color:#d8c9a3'>" + player.materials.t2 + "</b> | 💎 Легендарный остаток: <b style='color:#d8c9a3'>" + player.materials.t3 + "</b></p>";
+  document.getElementById("homeInfo").innerHTML = html;
+
+  var ps = document.getElementById("pointsSection");
+  var ph = "<div class='points-panel'><h3>✨ Свободные очки характеристик: " + player.freePoints + "</h3>";
+  if (player.freePoints > 0) {
+    ph += "<div class='reset-info'>Получены за апы и уровни. Распредели вручную!</div>";
+    STAT_KEYS.forEach(function(k) {
+      ph += "<div class='stat-row'><span style='width:110px;'>" + STAT_NAMES[k] + ": <b>" + player[k] + "</b></span><button class='stat-btn' onclick='spendPoint(\"" + k + "\")'>+</button></div>";
+    });
+  } else {
+    ph += "<div class='reset-info'>Нет свободных очков. Получай новые при повышении уровня или апа.</div>";
+  }
+  ph += "</div>";
+  ps.innerHTML = ph;
+
+  renderWorkSection();
+
+  var cs = getFullCombatStats();
+  var w = getEquippedWeapon();
+  document.getElementById("combatStatsSection").innerHTML =
+    "<div style='background:#120e0a;border:1px solid #5a4630;padding:12px;margin-top:10px;border-radius:4px;'>" +
+    "<div style='color:#c9a227;font-weight:bold;margin-bottom:8px;'>⚔ Боевые показатели</div>" +
+    "<div class='combat-stats-grid'>" +
+    "<span class='cs-label'>Урон:</span><span class='cs-val'>" + cs.dmgMin + "-" + cs.dmgMax + (w && (getTemplate(w.id) || {}).twoHand ? " (2Р)" : "") + "</span>" +
+    "<span class='cs-label'>💥 Крит:</span><span class='cs-val' style='color:#e07020'>" + cs.crit.toFixed(1) + "% (x" + cs.critMult.toFixed(2) + ")</span>" +
+    "<span class='cs-label'>💨 Уворот:</span><span class='cs-val' style='color:#7ab648'>" + cs.dodge.toFixed(1) + "%</span>" +
+    "<span class='cs-label'>⚡ Контрудар:</span><span class='cs-val' style='color:#b380e0'>" + cs.counter.toFixed(1) + "%</span>" +
+    "<span class='cs-label'>🛡 Блок:</span><span class='cs-val'>" + cs.block.toFixed(1) + "%</span>" +
+    "<span class='cs-label'>🔰 Анти-крит:</span><span class='cs-val'>" + cs.antiCrit.toFixed(1) + "%</span>" +
+    "<span class='cs-label'>🎯 Анти-уворот:</span><span class='cs-val'>" + cs.antiDodge.toFixed(1) + "%</span>" +
+    "<span class='cs-label'>🗡️ Пробитие брони:</span><span class='cs-val' style='color:#ff9900'>" + cs.armorPierce + "%</span>" +
+    "<span class='cs-label'>🛡 Парирование:</span><span class='cs-val' style='color:#7ab648'>" + cs.parry + "%</span>" +
+    "<span class='cs-label'>🎯 Бонус урона:</span><span class='cs-val' style='color:#e07020'>+" + cs.dmgBonus + "</span>" +
+    "<span class='cs-label'>🔰 Снижение урона:</span><span class='cs-val'>−" + cs.dmgReduction + "</span>" +
+    "<span class='cs-label'>Зон блока:</span><span class='cs-val'>" + maxBlockZones() + (hasShield() ? " (🛡)" : "") + "</span>" +
+    "</div></div>";
+
+  renderPotionSection();
+  renderWorkshop(); renderHealSection(); renderFatigueSection(); renderResetSection(); renderDailyReward();
+  document.getElementById("homeButtons").innerHTML =
+    "<button onclick='showXpTable()'>📊 Таблица опыта</button>" +
+    "<button onclick='showHistory()'>📜 История боёв</button>" +
+    "<button onclick='openCreateModal()' style='background:#5a1a1a;border-color:#a5281e;color:#e07020;'>Новый персонаж</button>";
+  updateQuestBadge();
+}
+
+function renderWorkSection() {
+  var section = document.getElementById("workSection");
+  if (!section) return;
+  var timeLeft = getWorkTimeLeft();
+  var isWorking = player.workShift !== null;
+  var isReady = isWorking && timeLeft <= 0;
+  var shiftNames = { short: "4 часа", medium: "6 часов", long: "8 часов" };
+  var shiftRewards = { short: "10-20", medium: "25-40", long: "40-60" };
+  var html = "<div class='work-panel'><h3>💼 Работа (пассивный доход)</h3>";
+  if (isWorking) {
+    html += "<div class='reset-info'>Текущая смена: <b>" + shiftNames[player.workShift] + "</b></div>";
+    if (isReady) {
+      html += "<div class='work-timer'>✅ Смена завершена!</div>";
+      html += "<button class='work-collect-btn' onclick='collectWork()'>💰 Забрать награду</button>";
+    } else {
+      html += "<div class='work-timer'>⏳ Осталось: " + formatWorkTime(timeLeft) + "</div>";
+    }
+  } else {
+    html += "<div class='reset-info'>Выбери смену. После завершения можно снова идти на любую.</div>";
+    html += "<div style='margin-top:10px;'>";
+    ["short", "medium", "long"].forEach(function(type) {
+      html += "<button class='work-shift-btn' onclick='startWork(\"" + type + "\")'>" + shiftNames[type] + " (" + shiftRewards[type] + " монет)</button>";
+    });
+    html += "</div>";
+  }
+  html += "</div>";
+  section.innerHTML = html;
+}
+
+function renderPotionSection() {
+  var section = document.getElementById("potionSection");
+  var owned = POTIONS.filter(function(p) { return (player.potions && player.potions[p.id]) > 0; });
+  if (owned.length === 0) { section.innerHTML = ""; return; }
+  var html = "<div class='potion-panel'><h3>🧪 Зелья (только вне боя)</h3>";
+  owned.forEach(function(p) {
+    html += "<div class='stat-row'><span>" + p.icon + " " + p.name + " ×" + player.potions[p.id] + " <span style='color:#9a8a68;font-size:12px'>(" + p.desc + ")</span></span><button onclick='usePotion(\"" + p.id + "\")'>Выпить</button></div>";
+  });
+  html += "</div>";
+  section.innerHTML = html;
+}
+function renderForge() {
+  var matBox = document.getElementById("forgeMaterials");
+  matBox.innerHTML = "🟫 Грубый материал: <b style='color:#d8c9a3'>" + player.materials.t1 + "</b> &nbsp; 🔷 Редкий материал: <b style='color:#d8c9a3'>" + player.materials.t2 + "</b> &nbsp; 💎 Легендарный остаток: <b style='color:#d8c9a3'>" + player.materials.t3 + "</b>";
+
+  var list = document.getElementById("forgeList");
+  list.innerHTML = "";
+  var hasAny = false;
+
+  SLOTS.forEach(function(s) {
+    if (s === "weapon") return;
+    var inst = player.equipment[s];
+    if (!inst) return;
+    hasAny = true;
+    var item = getTemplate(inst.id);
+    if (!item) return;
+
+    var curLv = inst.craft || 0;
+    var div = document.createElement("div");
+    div.className = "item";
+    var html = "<div><b>" + item.name + "</b> <span style='color:#c9a227;font-weight:bold'>[Крафт +" + curLv + "/3]</span>";
+    html += "<div class='meta'>" + bonusText(item.bonus) + "</div>";
+
+    if (curLv >= 3) {
+      html += "<div style='color:#7ab648;font-size:12px;margin-top:4px;'>✨ Максимальный крафт достигнут!</div>";
+      html += "</div><div></div>";
+    } else {
+      var recipe = CRAFT_RECIPES[curLv];
+      var okT1 = player.materials.t1 >= recipe.t1;
+      var okT2 = player.materials.t2 >= recipe.t2;
+      var okT3 = player.materials.t3 >= recipe.t3;
+      var okMoney = player.money >= recipe.cost;
+      var canCraft = okT1 && okT2 && okT3 && okMoney;
+
+      html += "<div style='font-size:12px;margin-top:6px;'>Следующий уровень: +" + recipe.lv + " (бонусы ×" + (1 + recipe.mult).toFixed(2) + ")</div>";
+      html += "<div style='font-size:12px;'>Нужно: ";
+      if (recipe.t1 > 0) html += "🟫 <span style='color:" + (okT1 ? "#7ab648" : "#e07020") + "'>" + player.materials.t1 + "/" + recipe.t1 + "</span> ";
+      if (recipe.t2 > 0) html += "🔷 <span style='color:" + (okT2 ? "#7ab648" : "#e07020") + "'>" + player.materials.t2 + "/" + recipe.t2 + "</span> ";
+      if (recipe.t3 > 0) html += "💎 <span style='color:" + (okT3 ? "#7ab648" : "#e07020") + "'>" + player.materials.t3 + "/" + recipe.t3 + "</span> ";
+      html += "💰 <span style='color:" + (okMoney ? "#7ab648" : "#e07020") + "'>" + player.money + "/" + recipe.cost + "</span></div>";
+      html += "</div><div><button onclick='craftUpgrade(\"" + s + "\")'" + (canCraft ? "" : " disabled") + ">Улучшить</button></div>";
+    }
+
+    div.innerHTML = html;
+    list.appendChild(div);
+  });
+
+  if (!hasAny) {
+    list.innerHTML = "<p style='color:#9a8a68;font-size:13px;'>Надень броню или щит, чтобы улучшать их здесь.</p>";
+  }
+}
+function renderWorkshop() {
+  var section = document.getElementById("workshopSection");
+  var hasItems = false;
+  var html = "<div class='workshop-panel'><h3>🔧 Мастерская</h3>";
+  var totalCost = getTotalRepairCost();
+  SLOTS.forEach(function(s) {
+    var inst = player.equipment[s];
+    if (!inst) return;
+    hasItems = true;
+    var d = getTemplate(inst.id);
+    if (!d) return;
+    var maxDur = getMaxDurability(d);
+    var curDur = inst.dur !== undefined ? inst.dur : maxDur;
+    var lv = inst.upg || 0;
+    var cost = getRepairCost(s);
+    var broken = curDur <= 0;
+    html += "<div class='workshop-item" + (broken ? " broken" : "") + "'><div><span class='w-name " + (broken ? "dur-broken" : "") + "'>" + d.name + (lv > 0 ? " <span class='upg'>+" + lv + "</span>" : "") + "</span> <span class='w-dur " + durColor(curDur, maxDur) + "'>" + (broken ? "💔 СЛОМАНО" : "[" + curDur + "/" + maxDur + "]") + "</span></div><div>" + (cost > 0 ? "<button onclick='repairItem(\"" + s + "\")'>🔧 Починить " + cost + "💰</button>" : "<span style='color:#7ab648;font-size:12px'>✅ Цел</span>") + "</div></div>";
+  });
+  if (!hasItems) html += "<p style='color:#9a8a68;font-size:13px;'>Надень снаряжение, чтобы видеть его состояние.</p>";
+  if (totalCost > 0) html += "<button class='repair-all-btn' onclick='repairAll()'" + (player.money < totalCost ? " disabled" : "") + ">🔧 Починить всё: " + totalCost + " монет</button>";
+  html += "</div>";
+  section.innerHTML = html;
+}
+function renderHealSection() {
+  var missing = player.maxHp - player.hp;
+  if (missing <= 0) { document.getElementById("healSection").innerHTML = ""; return; }
+  var cost = missing * 2;
+  document.getElementById("healSection").innerHTML = "<div class='heal-panel'><h3>⚕️ Целитель</h3><div class='reset-info'>Мгновенное лечение: <b>" + missing + " HP</b></div><div class='reset-cost'>Стоимость: <span class='paid'>" + cost + " монет</span></div><button onclick='healAtDoctor()'" + (player.money >= cost ? "" : " disabled") + ">Вылечиться полностью</button></div>";
+}
+function healAtDoctor() {
+  var missing = player.maxHp - player.hp;
+  if (missing <= 0) return;
+  var cost = missing * 2;
+  if (player.money < cost) { alert("Не хватает монет!"); return; }
+  player.money -= cost; player.hp = player.maxHp;
+  addLog("<span class='heal'>⚕️ Целитель вылечил тебя полностью (-" + cost + " монет).</span>", "heal");
+  player.dailyProgress.heals = (player.dailyProgress.heals || 0) + 1;
+  save(); renderHome(); renderBattleScreen();
+}
+function renderFatigueSection() {
+  var pct = Math.floor(player.fatigue / FATIGUE_MAX * 100);
+  var fl = getFatigueLevel();
+  var color = fl.emoji === "🟢" ? "#7ab648" : (fl.emoji === "🟡" ? "#e07020" : "#ff4444");
+  var warn = fl.expMult < 1
+    ? "<div class='reset-info' style='color:" + color + "'>" + fl.emoji + " <b>" + fl.name + "</b> — штрафы: опыт ×" + fl.expMult + ", монеты ×" + fl.goldMult + ", урон ×" + fl.dmgMult + "</div>"
+    : "<div class='reset-info' style='color:#7ab648'>🟢 Персонаж в отличной форме!</div>";
+  document.getElementById("fatigueSection").innerHTML = "<div class='fatigue-panel'><h3>😴 Усталость: " + pct + "% " + fl.emoji + " " + fl.name + "</h3><div class='fatigue-bar'><div style='width:" + pct + "%;background:" + color + "'></div></div>" + warn + "<div class='reset-info'>Восстановление: −1% каждую минуту простоя.</div></div>";
+}
+function renderDailyReward() {
+  var section = document.getElementById("dailyRewardSection");
+  if (canClaimDailyReward()) {
+    var reward = getDailyReward(player.level);
+    section.innerHTML = "<div class='daily-reward'>🎁 <b>Ежедневная награда готова!</b> " + reward + " монет <button onclick='claimDailyReward()' style='margin-left:10px;background:#2a4a1a;border-color:#7ab648;color:#7ab648'>Забрать</button></div>";
+  } else section.innerHTML = "";
+}
+
+function getQuestProgress(q) {
+  switch (q.type) {
+    case "kills": return player.wins || 0;
+    case "level": return player.level || 0;
+    case "buys": return (player.questProgress && player.questProgress.buys) || 0;
+    case "equipped": var c = 0; if (player.equipment) SLOTS.forEach(function(s) { if (player.equipment[s]) c++; }); return c;
+    case "locationKills": return (player.questProgress && player.questProgress.locationKills && player.questProgress.locationKills[q.location]) || 0;
+    default: return 0;
+  }
+}
+function getDailyQuestProgress(q) {
+  switch (q.id) {
+    case "d_kill10": case "d_kill25": case "d_kill50": return player.dailyProgress.kills || 0;
+    case "d_noLose10": return player.dailyProgress.streak || 0;
+    case "d_block20": return player.dailyProgress.blocks || 0;
+    case "d_dodge15": return player.dailyProgress.dodges || 0;
+    case "d_duel3": return player.dailyProgress.duelWins || 0;
+    case "d_upgrade1": return player.dailyProgress.upgrades || 0;
+    case "d_work1": return player.dailyProgress.workShifts || 0;
+    case "d_buy1": return player.dailyProgress.purchases || 0;
+    case "d_crit10": return player.dailyProgress.crits || 0;
+    case "d_heal3": return player.dailyProgress.heals || 0;
+    default: return 0;
+  }
+}
+function updateQuestBadge() {
+  var count = 0;
+  QUEST_TABLE.forEach(function(q) { if (player.questsClaimed.indexOf(q.id) < 0 && getQuestProgress(q) >= q.target) count++; });
+  if (player.dailyQuests) player.dailyQuests.forEach(function(qid) {
+    var q = DAILY_QUESTS_POOL.find(function(x) { return x.id === qid; });
+    if (q && player.dailyClaimed.indexOf(qid) < 0 && getDailyQuestProgress(q) >= q.target) count++;
+  });
+  var badge = document.getElementById("questBadge");
+  if (count > 0) { badge.textContent = count; badge.classList.remove("hidden"); } else badge.classList.add("hidden");
+}
+function renderQuests() {
+  ensureFields();
+  checkDailyReset();
+
+  document.getElementById("dailyResetTime").textContent = timeTillMidnight();
+
+  var dList = document.getElementById("dailyQuestList");
+  dList.innerHTML = "";
+
+  var dailyActive = [];
+  player.dailyQuests.forEach(function(qid) {
+    var q = DAILY_QUESTS_POOL.find(function(x) { return x.id === qid; });
+    if (!q) return;
+    var p = getDailyQuestProgress(q);
+    if (player.dailyClaimed.indexOf(q.id) < 0) dailyActive.push({ q: q, p: p, done: p >= q.target });
+  });
+
+  dailyActive.sort(function(a, b) {
+    if (a.done && !b.done) return -1;
+    if (!a.done && b.done) return 1;
+    return (b.p / b.q.target) - (a.p / a.q.target);
+  });
+
+  if (dailyActive.length === 0) {
+    dList.innerHTML = "<p style='color:#9a8a68;font-size:13px;'>Все ежедневные квесты выполнены! 🎉</p>";
+  }
+
+  dailyActive.forEach(function(dq) {
+    var q = dq.q;
+    var c = Math.min(dq.p, q.target);
+    var pct = Math.floor(c / q.target * 100);
+    var div = document.createElement("div");
+    div.className = "quest daily" + (dq.done ? " done" : "");
+    var h = "<div class='quest-title'>" + q.name + "</div><div class='quest-desc'>" + q.desc + "</div><div class='quest-reward'>Награда: " + q.rewardMoney + " монет, " + q.rewardPct + "% опыта уровня</div><div class='quest-progress-bar'><div class='" + (dq.done ? "full" : "") + "' style='width:" + pct + "%'></div></div><div class='quest-progress-text'>" + c + " / " + q.target + "</div>";
+    if (dq.done) h += "<button onclick='claimDailyQuest(\"" + q.id + "\")' style='margin-top:6px;background:#2a4a1a;border-color:#7ab648;color:#7ab648;'>Забрать награду</button>";
+    div.innerHTML = h;
+    dList.appendChild(div);
+  });
+
+  function sortQuestItems(a, b) {
+    var ad = a.p >= a.q.target;
+    var bd = b.p >= b.q.target;
+    if (ad && !bd) return -1;
+    if (!ad && bd) return 1;
+    return (b.p / b.q.target) - (a.p / a.q.target);
+  }
+
+  function renderQuestList(arr, listId, emptyText) {
+    var list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = "";
+
+    if (arr.length === 0) {
+      list.innerHTML = "<p style='color:#9a8a68;font-size:13px;'>" + emptyText + "</p>";
+      return;
+    }
+
+    arr.forEach(function(aq) {
+      var q = aq.q;
+      var c = Math.min(aq.p, q.target);
+      var pct = Math.floor(c / q.target * 100);
+      var done = aq.p >= q.target;
+      var div = document.createElement("div");
+      div.className = "quest" + (done ? " done" : "");
+      var h = "<div class='quest-title'>" + q.name + "</div><div class='quest-desc'>" + q.desc + "</div><div class='quest-reward'>Награда: " + q.rewardMoney + " монет" + (q.rewardPct > 0 ? ", " + q.rewardPct + "% опыта уровня" : "") + "</div><div class='quest-progress-bar'><div class='" + (done ? "full" : "") + "' style='width:" + pct + "%'></div></div><div class='quest-progress-text'>" + c.toLocaleString() + " / " + q.target.toLocaleString() + "</div>";
+      if (done) h += "<button onclick='claimQuest(\"" + q.id + "\")' style='margin-top:6px;background:#2a4a1a;border-color:#7ab648;color:#7ab648;'>Забрать награду</button>";
+      div.innerHTML = h;
+      list.appendChild(div);
+    });
+  }
+
+  var mainActive = [];
+  var locationActive = [];
+  var completed = [];
+
+  QUEST_TABLE.forEach(function(q) {
+    if (player.questsClaimed.indexOf(q.id) >= 0) {
+      completed.push(q);
+    } else {
+      var item = { q: q, p: getQuestProgress(q) };
+      if (q.type === "locationKills") locationActive.push(item);
+      else mainActive.push(item);
+    }
+  });
+
+  mainActive.sort(sortQuestItems);
+  locationActive.sort(sortQuestItems);
+
+  renderQuestList(mainActive, "questActiveList", "Все основные квесты выполнены! 🏆");
+  renderQuestList(locationActive, "locationQuestList", "Локационных квестов пока нет.");
+
+  var cList = document.getElementById("questCompletedList");
+  cList.innerHTML = "";
+
+  if (completed.length === 0) {
+    cList.innerHTML = "<p style='color:#9a8a68;font-size:13px;'>Пока нет выполненных основных квестов.</p>";
+  } else {
+    completed.forEach(function(q) {
+      var div = document.createElement("div");
+      div.className = "quest claimed";
+      div.innerHTML = "<div class='quest-title'>✔ " + q.name + "</div><div class='quest-claimed-info'>Получено: " + q.rewardMoney + " монет" + (q.rewardPct > 0 ? ", " + q.rewardPct + "% опыта уровня" : "") + "</div>";
+      cList.appendChild(div);
+    });
+  }
+
+  switchQuestTab(currentQuestTab);
+}
+function claimQuest(qid) {
+  ensureFields();
+  var q = QUEST_TABLE.find(function(x) { return x.id === qid; });
+  if (!q || player.questsClaimed.indexOf(qid) >= 0 || getQuestProgress(q) < q.target) return;
+  player.questsClaimed.push(qid);
+  player.money += q.rewardMoney;
+  var exp = questExp(q);
+  if (exp > 0 && player.level < MAX_LEVEL) { player.exp += exp; checkProgress(); }
+  save(); renderQuests(); renderHome();
+}
+function claimDailyQuest(qid) {
+  ensureFields();
+  var q = DAILY_QUESTS_POOL.find(function(x) { return x.id === qid; });
+  if (!q || player.dailyClaimed.indexOf(qid) >= 0 || getDailyQuestProgress(q) < q.target) return;
+  player.dailyClaimed.push(qid);
+  player.money += q.rewardMoney;
+  var exp = questExp(q);
+  if (exp > 0 && player.level < MAX_LEVEL) { player.exp += exp; checkProgress(); }
+  save(); renderQuests(); renderHome();
+}
+
+var currentShopTab = "potions";
+var currentShopLevel = 1;
+var SHOP_CATEGORIES = {
+  potions: { title: "🧪 Зелья лечения", desc: "Восстанавливают HP. Используются ТОЛЬКО вне боя.", isPotions: true },
+  knives: { title: "🗡 Ножи и кастеты", desc: "Быстрое оружие для ловких бойцов.", filter: function(d) { return d.slot === "weapon" && d.type === "knives"; } },
+  swords: { title: "⚔ Мечи", desc: "Классическое оружие воина.", filter: function(d) { return d.slot === "weapon" && d.type === "swords"; } },
+  axes: { title: "🪓 Топоры и секиры", desc: "Мощное оружие для силы.", filter: function(d) { return d.slot === "weapon" && d.type === "axes"; } },
+  clubs: { title: "🔨 Дубины и булавы", desc: "Тяжёлое дробящее оружие.", filter: function(d) { return d.slot === "weapon" && d.type === "clubs"; } },
+  helmet: { title: "🪖 Шлемы", desc: "Защита головы.", filter: function(d) { return d.slot === "head"; } },
+  shield: { title: "🛡 Щиты", desc: "Защита +1 зона блока. Нельзя с двуручным оружием.", filter: function(d) { return d.slot === "shield"; } },
+  wrists: { title: "🥊 Рукавицы", desc: "Защита и бонусы для кистей рук.", filter: function(d) { return d.slot === "wrists"; } },
+  bracers: { title: "🥊 Наручи", desc: "Дополнительные бонусы для рук.", filter: function(d) { return d.slot === "bracers"; } },
+  chest: { title: "🛡 Нагрудники", desc: "Основная защита корпуса.", filter: function(d) { return d.slot === "chest"; } },
+  belt: { title: "🪢 Пояса", desc: "Дополнительная защита и бонусы.", filter: function(d) { return d.slot === "belt"; } },
+  legs: { title: "👢 Обувь", desc: "Защита ног и бонусы уворота.", filter: function(d) { return d.slot === "legs"; } },
+  greaves: { title: "🦿 Поножи", desc: "Защита ног и коленей.", filter: function(d) { return d.slot === "greaves"; } },
+  earrings: { title: "👂 Серьги", desc: "Украшения для ушей. Дают бонусы к криту, увороту, МФ.", filter: function(d) { return d.slot === "earring"; } },
+  amulets: { title: "📿 Амулеты", desc: "Нательные украшения. Дают бонусы к защите и характеристикам.", filter: function(d) { return d.slot === "amulet"; } },
+  rings: { title: "💍 Кольца", desc: "Можно носить два кольца одновременно.", filter: function(d) { return d.slot === "ring1" || d.slot === "ring2"; } },
+  scrolls: { title: "📜 Свитки заточки", desc: "Для улучшения экипировки.", isScrolls: true }
+};
+function switchShopTab(tab) {
+  currentShopTab = tab;
+  document.querySelectorAll(".shop-tab").forEach(function(t) { t.classList.toggle("active", t.dataset.shopTab === tab); });
+  renderShop();
+}
+
+function switchShopLevel(lvl) {
+  currentShopLevel = lvl;
+  renderShop();
+}
+
+function renderShopLevelTabs(cat) {
+  var box = document.getElementById("shopLevelTabs");
+  if (!box) return;
+  if (cat.isPotions || cat.isScrolls || !cat.filter) { box.innerHTML = ""; return; }
+  var pool = SHOP_TABLE.filter(cat.filter);
+  var levelsSet = {};
+  pool.forEach(function(it) { if (it.minLvl) levelsSet[it.minLvl] = true; });
+  var levelList = Object.keys(levelsSet).map(Number).sort(function(a, b) { return a - b; });
+  if (levelList.length === 0) { box.innerHTML = ""; return; }
+  if (levelList.indexOf(currentShopLevel) < 0) currentShopLevel = levelList[0];
+  var html = "";
+  levelList.forEach(function(lvl) {
+    var active = currentShopLevel === lvl;
+    html += "<div class='level-tab" + (active ? " active" : "") + "' onclick='switchShopLevel(" + lvl + ")'>" + lvl + " ур.</div>";
+  });
+  box.innerHTML = html;
+}
+function renderShop() {
+  document.getElementById("shopMoney").textContent = player.money;
+  var cat = SHOP_CATEGORIES[currentShopTab];
+  var container = document.getElementById("shopContent");
+  container.innerHTML = "";
+  renderShopLevelTabs(cat);
+  var header = document.createElement("div");
+  header.innerHTML = "<div class='shop-category-title'>" + cat.title + "</div><div class='shop-category-desc'>" + cat.desc + "</div>";
+  container.appendChild(header);
+  if (cat.isPotions) {
+    var list = document.createElement("div");
+    POTIONS.forEach(function(p) {
+      var locked = player.level < p.minLvl;
+      var owned = (player.potions && player.potions[p.id]) || 0;
+      var div = document.createElement("div");
+      div.className = "item" + ((locked || player.money < p.price) ? " locked" : "");
+      div.innerHTML = "<div><span style='font-size:20px'>" + p.icon + "</span> <b>" + p.name + "</b> " + (owned > 0 ? "<span class='meta'>(есть: " + owned + ")</span>" : "") + "<div class='meta'>" + p.desc + " · " + p.price + " монет · только вне боя" + (locked ? " · <span style='color:#e07020'>нужен " + p.minLvl + " ур.</span>" : "") + "</div></div><div><button onclick='buyPotion(\"" + p.id + "\")'" + ((locked || player.money < p.price) ? " disabled" : "") + ">Купить</button></div>";
+      list.appendChild(div);
+    });
+    container.appendChild(list); return;
+  }
+  if (cat.isScrolls) {
+    var list = document.createElement("div");
+    SCROLLS.forEach(function(s) {
+      var owned = (player.scrolls && player.scrolls[s.id]) || 0;
+      var div = document.createElement("div");
+      div.className = "item" + (player.money < s.price ? " locked" : "");
+      div.innerHTML = "<div><span style='font-size:20px'>" + s.icon + "</span> <b>" + s.name + "</b> " + (owned > 0 ? "<span class='meta'>(есть: " + owned + ")</span>" : "") + "<div class='meta'>" + s.desc + " · " + s.price + " монет</div></div><div><button onclick='buyScroll(\"" + s.id + "\")'" + (player.money < s.price ? " disabled" : "") + ">Купить</button></div>";
+      list.appendChild(div);
+    });
+    container.appendChild(list); return;
+  }
+  var items = SHOP_TABLE.filter(function(d) {
+    if (!cat.filter(d)) return false;
+    if (d.minLvl !== currentShopLevel) return false;
+    return true;
+  });
+  var list = document.createElement("div");
+  items.forEach(function(d) {
+    var reqCheck = checkRequirements(d);
+    var lvlOk = checkMinLevel(d);
+    var available = reqCheck.ok && lvlOk;
+    var div = document.createElement("div");
+    div.className = "item" + (available ? "" : " locked");
+    var reqHtml = "";
+    if (d.req) reqHtml = reqCheck.ok ? "<div class='req-ok'>✓ " + reqText(d) + "</div>" : "<div class='req-fail'>✗ Нужно: " + reqCheck.missing.join(", ") + "</div>";
+    if (!lvlOk) reqHtml += "<div class='req-fail'>🔒 Требуется " + d.minLvl + " уровень</div>";
+    var extra = "";
+    if (d.slot === "weapon") {
+  extra = "Урон " + d.dmgMin + "-" + d.dmgMax + " · Прочность " + d.dur + (d.twoHand ? " · <span class='twohand-tag'>ДВУРУЧНОЕ (1 зона блока)</span>" : "");
+  var weaponBonus = bonusText(d.bonus);
+  if (weaponBonus && weaponBonus !== "—") extra += " · " + weaponBonus;
+}
+    else if (d.slot === "shield") {
+  extra = "Прочность " + d.dur + " · <span class='shield-tag'>+1 зона блока</span>";
+  var shieldBonus = bonusText(d.bonus);
+  if (shieldBonus && shieldBonus !== "—") extra += " · " + shieldBonus;
+}
+    else extra = bonusText(d.bonus);
+    var slotName = SLOT_NAMES[d.slot];
+    if (d.slot === "ring1" || d.slot === "ring2") slotName = "💍 Кольцо";
+    div.innerHTML = "<div><b>" + d.name + "</b><div class='meta'>" + slotName + " · " + extra + " · " + d.price + " монет</div>" + reqHtml + "</div><div><button onclick='buyItem(\"" + d.id + "\")'" + ((!available || player.money < d.price) ? " disabled" : "") + ">Купить</button></div>";
+    list.appendChild(div);
+  });
+  container.appendChild(list);
+}
+function bonusText(b) {
+  if (!b) return "—";
+  var p = [];
+  if (b.str) p.push("+" + b.str + " силы");
+  if (b.agi) p.push("+" + b.agi + " ловк.");
+  if (b.intu) p.push("+" + b.intu + " инту.");
+  if (b.end) p.push("+" + b.end + " вын.");
+  if (b.crit) p.push("+" + b.crit + "% крит");
+  if (b.critDmg) p.push("+" + Math.round(b.critDmg * 100) + "% крит.урон");
+  if (b.dodge) p.push("+" + b.dodge + "% уворот");
+  if (b.counter) p.push("+" + b.counter + "% контрудар");
+  if (b.block) p.push("+" + b.block + "% блок");
+  if (b.antiCrit) p.push("+" + b.antiCrit + "% анти-крит");
+  if (b.antiDodge) p.push("+" + b.antiDodge + "% анти-уворот");
+  if (b.hpFlat) p.push("+" + b.hpFlat + " HP");
+  return p.join(", ");
+}
+function reqText(item) {
+  if (!item.req) return "";
+  var parts = [];
+  for (var stat in item.req) parts.push(STAT_NAMES[stat] + " ≥ " + item.req[stat]);
+  return parts.join(", ");
+}
+
+function renderInv() {
+  var list = document.getElementById("invList");
+  list.innerHTML = "";
+  if (!player.inventory || player.inventory.length === 0) { list.innerHTML = "<p style='color:#9a8a68'>Пусто.</p>"; return; }
+  player.inventory.forEach(function(inst, idx) {
+    var d = getTemplate(inst.id);
+    if (!d) return;
+    var reqCheck = checkRequirements(d);
+    var div = document.createElement("div");
+    div.className = "item" + (reqCheck.ok ? "" : " locked");
+    var reqHtml = "";
+    if (d.req) reqHtml = reqCheck.ok ? "<div class='req-ok'>✓ Требования: " + reqText(d) + "</div>" : "<div class='req-fail'>✗ Нужно: " + reqCheck.missing.join(", ") + "</div>";
+    var extra = d.slot === "weapon" ? ("Урон " + d.dmgMin + "-" + d.dmgMax + " · Прочность " + d.dur + (d.twoHand ? " · 2Р" : "")) : bonusText(d.bonus);
+    var slotName = SLOT_NAMES[d.slot];
+    if (d.slot === "ring1" || d.slot === "ring2") slotName = "💍 Кольцо";
+    var upg = inst.upg || 0;
+    var craftLv = inst.craft || 0;
+    var upgTag = upg > 0 ? " <span class='upg'>+" + upg + "</span>" : "";
+    var craftTag = (d.slot !== "weapon" && craftLv > 0) ? " <span class='upg'>[Крафт +" + craftLv + "/3]</span>" : "";
+    div.innerHTML = "<div><b>" + d.name + "</b>" + upgTag + craftTag + "<div class='meta'>" + slotName + " · " + extra + "</div>" + reqHtml + "</div><div><button onclick='equipItem(" + idx + ")'" + (reqCheck.ok ? "" : " disabled") + ">Надеть</button> <button onclick='sellItem(" + idx + ")'>Продать</button></div>";
+    list.appendChild(div);
+  });
+}
+function equipItem(idx) {
+  var inst = player.inventory[idx];
+  if (!inst) return;
+  var d = getTemplate(inst.id);
+  if (!d) return;
+  var reqCheck = checkRequirements(d);
+  if (!reqCheck.ok) { alert("Не хватает характеристик: " + reqCheck.missing.join(", ")); return; }
+  if (d.slot === "shield") {
+    var wInst = getEquippedWeapon();
+    var wT = wInst ? getTemplate(wInst.id) : null;
+    if (wT && wT.twoHand) { alert("Нельзя надеть щит с двуручным оружием!"); return; }
+  }
+  if (d.slot === "weapon" && d.twoHand && hasShield()) {
+    alert("Нельзя надеть двуручное оружие со щитом! Сначала сними щит.");
+    return;
+  }
+  if (!player.equipment) player.equipment = {};
+  if (!player.materials) player.materials = { t1: 0, t2: 0, t3: 0 };
+  var targetSlot = d.slot;
+  if (targetSlot === "ring1" && player.equipment["ring1"] && !player.equipment["ring2"]) targetSlot = "ring2";
+  var old = player.equipment[targetSlot];
+  if (old) player.inventory.push(old);
+  player.equipment[targetSlot] = inst;
+  player.inventory.splice(idx, 1);
+  recalcMaxHp(); save();
+  renderInv(); renderEquip(); renderHome();
+}
+function sellItem(idx) {
+  var inst = player.inventory[idx];
+  if (!inst) return;
+  var d = getTemplate(inst.id);
+  if (!d) return;
+  player.money += Math.floor(d.price / 2);
+  player.inventory.splice(idx, 1);
+  save(); renderInv(); renderHome(); renderShop();
+}
+function renderEquip() {
+  var list = document.getElementById("equipList");
+  list.innerHTML = "";
+  if (!player.equipment) player.equipment = {};
+  SLOTS.forEach(function(s) {
+    var inst = player.equipment[s];
+    var d = inst ? getTemplate(inst.id) : null;
+    var div = document.createElement("div");
+    div.className = "item";
+    var content = "<div><b>" + SLOT_NAMES[s] + "</b>";
+    if (d && inst) {
+      var maxDur = getMaxDurability(d);
+      var curDur = inst.dur !== undefined ? inst.dur : maxDur;
+      var lv = inst.upg || 0;
+      var broken = curDur <= 0;
+      var extra = d.slot === "weapon" ? ("Урон " + d.dmgMin + "-" + d.dmgMax + (d.twoHand ? " · <span class='twohand-tag'>2Р</span>" : "")) : bonusText(d.bonus);
+      var craftLv2 = inst.craft || 0;
+      var upgTag = lv > 0 ? " <span class='upg'>+" + lv + "</span>" : "";
+      var craftTag2 = (s !== "weapon" && craftLv2 > 0) ? " <span class='upg'>[Крафт +" + craftLv2 + "/3]</span>" : "";
+      content += "<div class='meta'><span>" + d.name + "</span>" + upgTag + craftTag2 + " — " + extra + "<br><span class='dur " + durColor(curDur, maxDur) + "'>" + (broken ? "💔 СЛОМАНО" : "Прочность: " + curDur + "/" + maxDur) + "</span></div>";
+      content += "</div><div><button onclick='unequip(\"" + s + "\")'>Снять</button> " + (lv < 5 && d.slot !== "shield" ? "<button onclick='tryUpgrade(\"" + s + "\",false)'>⚒️ Заточить</button> <button onclick='tryUpgrade(\"" + s + "\",true)' style='background:#2a3a1a;border-color:#7ab648'>🛡 С защитой</button>" : "") + "</div>";
+    } else content += "<div class='meta'>пусто</div></div><div></div>";
+    div.innerHTML = content;
+    list.appendChild(div);
+  });
+}
+function unequip(slot) {
+  var inst = player.equipment[slot];
+  if (!inst) return;
+  player.inventory.push(inst);
+  player.equipment[slot] = null;
+  recalcMaxHp(); save();
+  renderInv(); renderEquip(); renderHome();
+}
+function recalcMaxHp() {
+  var b = getEquipBonus();
+  var newMax = 20 + player.end * 6 + (b.hpFlat || 0);
+  if (player.maxHp !== newMax) {
+    var ratio = player.hp / player.maxHp;
+    player.maxHp = newMax;
+    player.hp = Math.max(1, Math.min(player.maxHp, Math.floor(newMax * ratio)));
+  }
+}
+
+function buyItem(id) {
+  var d = getTemplate(id);
+  if (!d || player.money < d.price) return;
+  if (!checkMinLevel(d)) { alert("Нужен " + d.minLvl + " уровень!"); return; }
+  var reqCheck = checkRequirements(d);
+  if (!reqCheck.ok) { alert("Не хватает характеристик: " + reqCheck.missing.join(", ")); return; }
+  if (d.slot === "shield") {
+    var wInst = getEquippedWeapon();
+    var wT = wInst ? getTemplate(wInst.id) : null;
+    if (wT && wT.twoHand) { alert("Нельзя надеть щит с двуручным оружием! Сними оружие или замени на одноручное."); return; }
+  }
+  var slotName = SLOT_NAMES[d.slot];
+  if (d.slot === "ring1" || d.slot === "ring2") slotName = "кольцо";
+  if (!confirm("Купить «" + d.name + "» (" + slotName + ") за " + d.price + " монет?")) return;
+  player.money -= d.price;
+  if (!player.inventory) player.inventory = [];
+  var inst = makeItemInstance(id);
+  if (!inst) return;
+  player.inventory.push(inst);
+  ensureFields();
+  player.questProgress.buys = (player.questProgress.buys || 0) + 1;
+  player.dailyProgress.purchases = (player.dailyProgress.purchases || 0) + 1;
+  alert("✅ «" + d.name + "» куплен!");
+  save(); renderShop(); renderHome();
+}
+function buyPotion(id) {
+  var p = POTIONS.find(function(x) { return x.id === id; });
+  if (!p || player.money < p.price || player.level < p.minLvl) return;
+  if (!confirm("Купить «" + p.name + "» за " + p.price + " монет?")) return;
+  player.money -= p.price;
+  if (!player.potions) player.potions = {};
+  player.potions[id] = (player.potions[id] || 0) + 1;
+  player.dailyProgress.purchases = (player.dailyProgress.purchases || 0) + 1;
+  alert("✅ «" + p.name + "» куплено!");
+  save(); renderShop(); renderHome();
+}
+function usePotion(id) {
+  if (enemy !== null) { alert("Зелья нельзя использовать в бою!"); return; }
+  var p = POTIONS.find(function(x) { return x.id === id; });
+  if (!p || !player.potions || !player.potions[id] || player.potions[id] <= 0) return;
+  player.potions[id]--;
+  var healed = Math.min(p.heal, player.maxHp - player.hp);
+  player.hp = Math.min(player.maxHp, player.hp + p.heal);
+  addLog("<span class='heal'>🧪 «" + p.name + "»: +" + healed + " HP.</span>", "heal");
+  player.dailyProgress.heals = (player.dailyProgress.heals || 0) + 1;
+  save(); renderHome(); renderBattleScreen();
+}
+
+function makeEnemy() {
+  var loc = LOCATIONS.find(function(l) { return l.id === currentLocation; }) || LOCATIONS[0];
+  var eb = getEquipBonus();
+
+  var mult = 1.1 * loc.statMult;
+  var st = {
+    str: Math.max(1, Math.floor((player.str + eb.str) * mult)),
+    agi: Math.max(1, Math.floor((player.agi + eb.agi) * mult)),
+    intu: Math.max(1, Math.floor((player.intu + eb.intu) * mult)),
+    end: Math.max(1, Math.floor((player.end + eb.end) * mult))
+  };
+
+  var eq = {};
+  SLOTS.forEach(function(s) {
+    var inst = player.equipment ? player.equipment[s] : null;
+    if (inst) {
+      var t = getTemplate(inst.id);
+      if (t) eq[s] = { id: inst.id, dur: getMaxDurability(t), upg: 0, craft: 0 };
+    }
+  });
+  var eqBonus = calcEquipBonusFromMap(eq);
+
+  var hp = 20 + st.end * 6 + eqBonus.hpFlat;
+  var wr = getWeaponRange(player);
+  var dmgMin = wr.min;
+  var dmgMax = wr.max;
+
+  var isElite = Math.random() < ELITE_CHANCE;
+  var name = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
+
+  if (isElite) {
+    hp = Math.floor(hp * ELITE_HP_MULT);
+    dmgMin = Math.max(1, Math.round(dmgMin * ELITE_DMG_MULT));
+    dmgMax = Math.max(2, Math.round(dmgMax * ELITE_DMG_MULT));
+    var pool = ELITE_NAMES[loc.id] || [name];
+    name = pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  return {
+    name: name,
+    location: loc.id,
+    archetype: getPlayerBuild(),
+    isElite: isElite,
+    str: st.str, agi: st.agi, intu: st.intu, end: st.end,
+    maxHp: hp, hp: hp,
+    dmgMin: dmgMin, dmgMax: dmgMax,
+    equipMap: eq,
+    equipBonus: eqBonus
+  };
+}
+function makeDuelEnemy() {
+  var eb = getEquipBonus();
+  var dStr = Math.max(1, Math.floor((player.str + eb.str) * DUEL_STAT_MULT));
+  var dAgi = Math.max(1, Math.floor((player.agi + eb.agi) * DUEL_STAT_MULT));
+  var dIntu = Math.max(1, Math.floor((player.intu + eb.intu) * DUEL_STAT_MULT));
+  var dEnd = Math.max(1, Math.floor((player.end + eb.end) * DUEL_STAT_MULT));
+  var dHp = 20 + dEnd * 6;
+  var wr = getWeaponRange(player);
+  return {
+    name: "Тень " + player.name,
+    str: dStr, agi: dAgi, intu: dIntu, end: dEnd, maxHp: dHp, hp: dHp,
+    dmgMin: Math.max(1, Math.round(wr.min * DUEL_STAT_MULT)), dmgMax: Math.max(2, Math.round(wr.max * DUEL_STAT_MULT))
+  };
+}
+/* === АВАТАРЫ === */
+var MALE_AVATARS = [
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Aragorn&backgroundColor=b6e3f4&scale=85",
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Geralt&backgroundColor=c0aede&scale=85",
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Kratos&backgroundColor=d1d4f9&scale=85",
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Legolas&backgroundColor=ffd5dc&scale=85",
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Conan&backgroundColor=ffdfbf&scale=85"
+];
+
+var FEMALE_AVATARS = [
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Yennefer&backgroundColor=b6e3f4&scale=85",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Triss&backgroundColor=c0aede&scale=85",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Arya&backgroundColor=d1d4f9&scale=85",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Xena&backgroundColor=ffd5dc&scale=85",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Aloy&backgroundColor=ffdfbf&scale=85"
+];
+
+function getPlayerAvatar() {
+  if (player && player.avatarUrl) return player.avatarUrl;
+  if (!player) return MALE_AVATARS[0];
+  return player.gender === "Ж" ? FEMALE_AVATARS[0] : MALE_AVATARS[0];
+}
+
+function getBotAvatar(name, gender) {
+  var style = (gender === "Ж") ? "lorelei" : "adventurer";
+  return "https://api.dicebear.com/7.x/" + style + "/svg?seed=" + encodeURIComponent(name);
+}
+/* === PVP-ПРОТИВНИК === */
+var PVP_NAMES = [
+  "Тень_Арены", "Мечник77", "Кровавый_Лорд", "Гладиатор_X", "Ночной_Клинок",
+  "Стальной_Волк", "Хитрый_Лис", "Бешеный_Топор", "Странник_Дорог",
+  "Охотник_Теней", "Ветеран_Битв", "Молодой_Лев", "Седой_Волк", "Ловчий"
+];
+
+function makePvPEnemy() {
+  var eb = getEquipBonus();
+  var playerLevel = player.level;
+  var rollHigher = Math.random() < 0.5 && playerLevel < MAX_LEVEL;
+  var oppLevel = rollHigher ? playerLevel + 1 : playerLevel;
+
+  var mult = 1.15;
+  var dStr = Math.max(1, Math.floor((player.str + eb.str) * mult));
+  var dAgi = Math.max(1, Math.floor((player.agi + eb.agi) * mult));
+  var dIntu = Math.max(1, Math.floor((player.intu + eb.intu) * mult));
+  var dEnd = Math.max(1, Math.floor((player.end + eb.end) * mult));
+
+  var eq = {};
+  SLOTS.forEach(function(s) {
+    var inst = player.equipment ? player.equipment[s] : null;
+    if (inst) {
+      var t = getTemplate(inst.id);
+      if (t) eq[s] = { id: inst.id, dur: getMaxDurability(t), upg: 0, craft: 0 };
+    }
+  });
+  var eqBonus = calcEquipBonusFromMap(eq);
+
+  var wr = getWeaponRange(player);
+  var dmgMin = wr.min;
+  var dmgMax = wr.max;
+
+  var dHp = 20 + dEnd * 6 + eqBonus.hpFlat;
+
+  var name = PVP_NAMES[Math.floor(Math.random() * PVP_NAMES.length)] + " [" + oppLevel + "]";
+
+  return {
+    name: name,
+    level: oppLevel,
+    isHigherLevel: oppLevel > playerLevel,
+    str: dStr, agi: dAgi, intu: dIntu, end: dEnd,
+    maxHp: dHp, hp: dHp,
+    dmgMin: dmgMin, dmgMax: dmgMax,
+    equipMap: eq,
+    equipBonus: eqBonus
+  };
+}
+function pickBossEquipment(archId) {
+  var prefer = ARCHETYPE_PREFERRED_STAT[archId];
+  var eq = {};
+
+  var wTypes = ARCHETYPE_WEAPON_TYPES[archId];
+  var wPool = SHOP_TABLE.filter(function(t) {
+    return t.slot === "weapon" && wTypes.indexOf(t.type) >= 0;
+  });
+  wPool.sort(function(a, b) { return (b.dmgMin + b.dmgMax) - (a.dmgMin + a.dmgMax); });
+  if (wPool.length > 0) {
+    var w = wPool[Math.floor(Math.random() * Math.min(3, wPool.length))];
+    eq.weapon = { id: w.id, dur: getMaxDurability(w), upg: 0, craft: 0 };
+  }
+
+  ["head","chest","belt","legs","wrists","bracers","greaves","earring","amulet"].forEach(function(slot) {
+    var pool = SHOP_TABLE.filter(function(t) {
+      if (t.slot !== slot) return false;
+      if (!t.bonus) return false;
+      return (t.bonus[prefer] || 0) > 0;
+    });
+    pool.sort(function(a, b) { return (b.bonus[prefer] || 0) - (a.bonus[prefer] || 0); });
+    if (pool.length > 0) {
+      var pick = pool[Math.floor(Math.random() * Math.min(3, pool.length))];
+      eq[slot] = { id: pick.id, dur: getMaxDurability(pick), upg: 0, craft: 0 };
+    }
+  });
+
+  if (archId === "tank") {
+    var shPool = SHOP_TABLE.filter(function(t) { return t.slot === "shield"; });
+    if (shPool.length > 0) {
+      var sh = shPool[Math.floor(Math.random() * shPool.length)];
+      eq.shield = { id: sh.id, dur: getMaxDurability(sh), upg: 0, craft: 0 };
+    }
+  }
+
+  return eq;
+}
+function pickEnemyEquipment(level, archId, isElite) {
+  var prefer = ARCHETYPE_PREFERRED_STAT[archId] || "str";
+  var wTypes = ARCHETYPE_WEAPON_TYPES[archId] || ["swords"];
+  var eq = {};
+
+  var minLvl = Math.max(1, level - 1);
+  var maxLvl = level + 1;
+
+  function levelOk(t) {
+    return t.minLvl >= minLvl && t.minLvl <= maxLvl;
+  }
+
+  var wPool = SHOP_TABLE.filter(function(t) {
+    return t.slot === "weapon" && wTypes.indexOf(t.type) >= 0 && levelOk(t);
+  });
+  if (wPool.length === 0) {
+    wPool = SHOP_TABLE.filter(function(t) {
+      return t.slot === "weapon" && wTypes.indexOf(t.type) >= 0 && t.minLvl <= maxLvl;
+    });
+  }
+  if (wPool.length > 0) {
+    var w = wPool[Math.floor(Math.random() * wPool.length)];
+    eq.weapon = { id: w.id, dur: getMaxDurability(w), upg: 0, craft: 0 };
+  }
+
+  ["head","chest","belt","legs","wrists","bracers","greaves","earring","amulet"].forEach(function(slot) {
+    var pool = SHOP_TABLE.filter(function(t) {
+      if (t.slot !== slot) return false;
+      if (!levelOk(t)) return false;
+      if (!t.bonus) return false;
+      return (t.bonus[prefer] || 0) > 0;
+    });
+    if (pool.length === 0) {
+      pool = SHOP_TABLE.filter(function(t) {
+        if (t.slot !== slot) return false;
+        if (!levelOk(t)) return false;
+        return true;
+      });
+    }
+    if (pool.length > 0) {
+      var pick = pool[Math.floor(Math.random() * pool.length)];
+      eq[slot] = { id: pick.id, dur: getMaxDurability(pick), upg: 0, craft: 0 };
+    }
+  });
+
+  if (archId === "tank") {
+    var shPool = SHOP_TABLE.filter(function(t) {
+      return t.slot === "shield" && levelOk(t);
+    });
+    if (shPool.length === 0) {
+      shPool = SHOP_TABLE.filter(function(t) {
+        return t.slot === "shield" && t.minLvl <= maxLvl;
+      });
+    }
+    if (shPool.length > 0) {
+      var sh = shPool[Math.floor(Math.random() * shPool.length)];
+      eq.shield = { id: sh.id, dur: getMaxDurability(sh), upg: 0, craft: 0 };
+    }
+  }
+
+  return eq;
+}
+function makeBossEnemy() {
+  var cfg = getBossConfig(currentLocation);
+  if (!cfg) return null;
+  var eb = getEquipBonus();
+  var playerTotal = (player.str + eb.str) + (player.agi + eb.agi)
+                  + (player.intu + eb.intu) + (player.end + eb.end);
+  var budget = playerTotal * cfg.levelMult;
+
+  var arch = pickArchetype();
+  var st = allocStats(budget, arch.weights);
+  var eq = pickBossEquipment(arch.id);
+
+  var bonHp = 0;
+  ["head","chest","belt","legs","wrists","bracers","greaves","earring","amulet"].forEach(function(s) {
+    var inst = eq[s]; if (!inst) return;
+    var t = getTemplate(inst.id); if (!t || !t.bonus) return;
+    if (t.bonus.str)  st.str  += t.bonus.str;
+    if (t.bonus.agi)  st.agi  += t.bonus.agi;
+    if (t.bonus.intu) st.intu += t.bonus.intu;
+    if (t.bonus.end)  st.end  += t.bonus.end;
+    if (t.bonus.hpFlat) bonHp += t.bonus.hpFlat;
+  });
+
+  var w = eq.weapon ? getTemplate(eq.weapon.id) : null;
+  var dmgMin = w ? w.dmgMin : 3;
+  var dmgMax = w ? w.dmgMax : 5;
+
+  var hp = 20 + st.end * 6 + bonHp;
+
+  return {
+    name: cfg.name,
+    location: cfg.location,
+    archetype: arch.name,
+    isBoss: true,
+    str: st.str, agi: st.agi, intu: st.intu, end: st.end,
+    maxHp: hp, hp: hp,
+    dmgMin: dmgMin, dmgMax: dmgMax,
+    bossEquipment: eq
+  };
+}
+function startBattleLog() {
+  document.getElementById("log").innerHTML = "";
+  battleEvents = [];
+  battleRounds = 0;
+  battleRecording = true;
+}
+document.getElementById("newEnemyBtn").onclick = function() {
+  if (!player) return;
+  var loc = LOCATIONS.find(function(l) { return l.id === currentLocation; });
+
+  if (loc && loc.isBoss) {
+    var cfg = getBossConfig(loc.id);
+    if (!cfg) return;
+    var cdUntil = (player.bossCooldowns && player.bossCooldowns[loc.id]) || 0;
+    var left = cdUntil - Date.now();
+    if (left > 0) {
+      var h = Math.floor(left / 3600000), m = Math.floor((left % 3600000) / 60000);
+      alert(cfg.name + " ещё восстанавливает силы! Осталось: " + h + "ч " + m + "м");
+      return;
+    }
+    if (player.hp <= 0) { player.hp = Math.max(1, Math.floor(player.maxHp * 0.3)); save(); }
+    enemy = makeBossEnemy();
+    if (!enemy) return;
+    isDuel = false;
+    combatState = { dodgeBoost: 0 };
+    initSkillState(); skillState.selectedSkill = null;
+    startBattleLog();
+    resetTurnDeadline();
+    addLog("<span class='legendary'>👑 " + cfg.name + " выходит на бой! (архетип: " + enemy.archetype + ")</span>", "sys");
+    attackZones = []; blockZones = [];
+    renderBattleScreen();
+    return;
+  }
+
+  if (player.hp <= 0) { player.hp = Math.max(1, Math.floor(player.maxHp * 0.3)); save(); }
+  enemy = makeEnemy(); isDuel = false; combatState = { dodgeBoost: 0 };
+  initSkillState(); skillState.selectedSkill = null;
+  startBattleLog();
+  resetTurnDeadline();
+  var bn = { crit: "Крит", dodge: "Ловкач", tank: "Танк" };
+  addLog((enemy.isElite ? "⭐ <span class='rare'>ЭЛИТА! </span>" : "") + "На арену выходит " + fighterName(enemy) + " (билд: " + bn[skillState.eBuild] + ").", "sys");
+  attackZones = []; blockZones = [];
+  renderBattleScreen();
+};
+document.getElementById("duelBtn").onclick = function() {
+  if (!player) return;
+  if (enemy) return;
+  if (player.hp <= 0) { player.hp = Math.max(1, Math.floor(player.maxHp * 0.3)); save(); }
+
+  // кулдаун
+  var cd = (player.pvpLastFight || 0) + PVP_COOLDOWN_MS - Date.now();
+  if (cd > 0) {
+    var sec = Math.ceil(cd / 1000);
+    alert("Кулдаун PvP: ещё " + sec + " сек.");
+    return;
+  }
+
+  // показать оверлей поиска
+  document.getElementById("pvpSearchOverlay").classList.remove("hidden");
+  document.getElementById("pvpSearchStatus").textContent = "Сканируем арену...";
+
+  // через 2-5 сек — нашли соперника
+  var searchTime = PVP_SEARCH_MIN_MS + Math.random() * (PVP_SEARCH_MAX_MS - PVP_SEARCH_MIN_MS);
+  setTimeout(function() {
+    if (document.getElementById("pvpSearchOverlay").classList.contains("hidden")) return; // отменили
+
+    enemy = makePvPEnemy();
+    var status = document.getElementById("pvpSearchStatus");
+
+    if (enemy.isHigherLevel) {
+      status.innerHTML = "Соперник <b>" + esc(enemy.name) + "</b> получил запрос на бой.<br>" +
+        "<span style='color:#e07020'>Ждём ответа: <b id='pvpWaitSeconds'>20</b> сек.</span>";
+      var waitLeft = 20;
+      var tickTimer = setInterval(function() {
+        waitLeft--;
+        var el = document.getElementById("pvpWaitSeconds");
+        if (el) el.textContent = waitLeft;
+        if (waitLeft <= 0) clearInterval(tickTimer);
+      }, 1000);
+
+      // Соперник отвечает через 3-15 секунд
+      var respondTime = 3000 + Math.random() * 12000;
+      setTimeout(function() {
+        clearInterval(tickTimer);
+        if (document.getElementById("pvpSearchOverlay").classList.contains("hidden")) return;
+        var roll = Math.random();
+        if (roll < 0.70) {
+          status.innerHTML = "<span style='color:#7ab648'>Соперник принял бой!</span>";
+          setTimeout(startPvPFight, 700);
+        } else if (roll < 0.90) {
+          status.innerHTML = "<span style='color:#e07020'>Соперник отказался от боя.</span><br>" +
+            "<span style='color:#9a8a68;font-size:12px'>Можно искать нового</span>";
+          setTimeout(function() {
+            if (document.getElementById("pvpSearchOverlay").classList.contains("hidden")) return;
+            cancelPvpSearchForce();
+            setTimeout(function() { alert("Соперник отказался. Нажми PvP, чтобы найти нового."); }, 200);
+          }, 1500);
+        } else {
+          status.innerHTML = "<span style='color:#e07020'>Соперник не ответил (таймаут).</span><br>" +
+            "<span style='color:#9a8a68;font-size:12px'>Можно искать нового</span>";
+          setTimeout(function() {
+            if (document.getElementById("pvpSearchOverlay").classList.contains("hidden")) return;
+            cancelPvpSearchForce();
+            setTimeout(function() { alert("Соперник не ответил. Нажми PvP, чтобы найти нового."); }, 200);
+          }, 1500);
+        }
+      }, respondTime);
+    } else {
+      // равный уровень — сразу в бой
+      status.textContent = "Найден соперник: " + enemy.name;
+      setTimeout(startPvPFight, 500);
+    }
+  }, searchTime);
+};
+
+function startPvPFight() {
+  document.getElementById("pvpSearchOverlay").classList.add("hidden");
+  if (!enemy) return;
+  isDuel = true;
+  combatState = { dodgeBoost: 0, punishNextHit: 1 };
+  initSkillState(); skillState.selectedSkill = null;
+  startBattleLog();
+  resetTurnDeadline();
+  addLog("<span class='duel-log'>⚔ PVP! " + fighterName(enemy) + " (уровень " + enemy.level + "). Награда ×" + PVP_REWARD_MULT + "!</span>", "sys");
+  attackZones = []; blockZones = [];
+  renderBattleScreen();
+}
+
+function cancelPvpSearch(e) {
+  if (e && e.target !== document.getElementById("pvpSearchOverlay")) return;
+  cancelPvpSearchForce();
+}
+function cancelPvpSearchForce() {
+  document.getElementById("pvpSearchOverlay").classList.add("hidden");
+  enemy = null;
+}
+document.getElementById("fightBtn").onclick = function() {
+  if (!enemy || enemy.hp <= 0 || player.hp <= 0) return;
+  battleRounds++;
+  var skillType = "none";
+  if (skillState && skillState.selectedSkill !== null) {
+    skillType = applySelectedSkill();
+    renderBattleScreen();
+    if (enemy === null) return;
+    if (enemy.hp <= 0) { victory(); return; }
+    if (player.hp <= 0) { defeat(); return; }
+  }
+  if (skillType !== "instant") {
+    if (skillState && skillState.pStun) { skillState.pStun = false; addLog("😵 <span class='dmg'>Ты оглушён! Пропускаешь ход!</span>", "dmg"); }
+    else {
+      playerAttack();
+      renderBattleScreen();
+      if (enemy === null) return;
+      if (enemy.hp <= 0) { victory(); return; }
+    }
+  }
+  if (skillState && skillState.eStun) { skillState.eStun = false; addLog("😵 <span class='heal'>Враг оглушён! Пропускает ход!</span>", "heal"); }
+  else {
+    tryEnemySkill();
+    if (!enemy || enemy.hp <= 0) return;
+    strike(enemy, player, randomZone(), blockZones);
+    renderBattleScreen();
+    if (player.hp <= 0) { defeat(); return; }
+  }
+  if (skillState) {
+    if (skillState.pFx.shadow > 0) skillState.pFx.shadow--;
+    if (skillState.eFx.shadow > 0) skillState.eFx.shadow--;
+    skillState.pFx.rush = false;
+    skillState.pFx.series = false;
+    skillState.eFx.rush = false;
+    skillState.eFx.series = false;
+  }
+  attackZones = []; blockZones = [];
+  resetTurnDeadline();
+  renderBattleScreen();
+  save();
+};
+function randomZone() { return ZONES[Math.floor(Math.random() * ZONES.length)]; }
+function randomTwoZones() { return ZONES.slice().sort(function() { return Math.random() - 0.5; }).slice(0, 2); }
+
+function playerAttack() {
+  if (!enemy || enemy.hp <= 0 || player.hp <= 0) return;
+  if (attackZones.length === 0) return;
+  strike(player, enemy, attackZones[0], randomTwoZones());
+}
+function strike(att, def, zone, blocks, forcedDmg) {
+  var isP = (att === player);
+  var eb = isP ? getEquipBonus() : (att.equipBonus || { str: 0, agi: 0, intu: 0, end: 0, crit: 0, critDmg: 0, dodge: 0, counter: 0, block: 0, antiCrit: 0, antiDodge: 0, hpFlat: 0, dmgBonus: 0, armorPierce: 0, parry: 0, dmgReduction: 0, zoneArmor: { head: 0, chest: 0, belly: 0, belt: 0, legs: 0 } });
+  var db = isP ? { str: 0, agi: 0, intu: 0, end: 0, crit: 0, critDmg: 0, dodge: 0, counter: 0, block: 0, antiCrit: 0, antiDodge: 0, hpFlat: 0, dmgBonus: 0, armorPierce: 0, parry: 0, dmgReduction: 0, zoneArmor: { head: 0, chest: 0, belly: 0, belt: 0, legs: 0 } } : (def.equipBonus || { str: 0, agi: 0, intu: 0, end: 0, crit: 0, critDmg: 0, dodge: 0, counter: 0, block: 0, antiCrit: 0, antiDodge: 0, hpFlat: 0, dmgBonus: 0, armorPierce: 0, parry: 0, dmgReduction: 0, zoneArmor: { head: 0, chest: 0, belly: 0, belt: 0, legs: 0 } });
+  var effAttStr = att.str + (isP ? eb.str : 0);
+  var effAttIntu = att.intu + (isP ? eb.intu : 0);
+  var effDefAgi = def.agi + (isP ? 0 : db.agi);
+  var effDefEnd = def.end + (isP ? 0 : db.end);
+  var defDodgeBase = Math.min(45, effDefAgi * 0.3 + Math.floor((isP ? 0 : db.dodge) / 10));
+  var attAntiDodge = Math.min(40, effAttIntu * 0.3 + Math.floor((isP ? eb.antiDodge : 0) / 10));
+  var effDodge = Math.max(0, defDodgeBase - attAntiDodge);
+  if (!isP) effDodge = Math.floor(effDodge * getFatigueLevel().dodgeMult);
+  if (skillState) {
+    if (!isP && skillState.pFx.shadow > 0) effDodge += 10;
+    if (isP && skillState.eFx.shadow > 0) effDodge += 10;
+    if (!isP && skillState.pFx.rush) effDodge = 90;
+    if (isP && skillState.eFx.rush) effDodge = 90;
+  }
+  if (Math.random() * 100 < effDodge) {
+    addLog(fighterName(att) + " бьёт в «" + zone + "», но " + fighterName(def) + " <span class='heal'>уклоняется</span>!", "sys");
+    if (!isP) {
+      player.dailyProgress.dodges = (player.dailyProgress.dodges || 0) + 1;
+      if (skillState && skillState.build === "dodge") addCharge("player", 1);
+    } else {
+      if (skillState && skillState.eBuild === "dodge") addCharge("enemy", 1);
+    }
+    var counterChance = Math.min(25, effDefAgi * 0.3 + Math.floor((isP ? 0 : db.counter) / 3));
+    if (Math.random() * 100 < counterChance) {
+      var cDmg = Math.max(1, Math.floor(1 + def.str * 0.4));
+      att.hp -= cDmg;
+      addLog("<span class='counter'>⚡ " + fighterName(def) + " контрудар: " + cDmg + " урона!</span>");
+    }
+    combatState.dodgeBoost = 0;
+    return;
+  }
+  var dmg;
+  if (forcedDmg !== undefined && forcedDmg !== null) {
+    dmg = forcedDmg;
+  } else {
+    var wr = getWeaponRange(att);
+    dmg = wr.min + Math.floor(Math.random() * (wr.max - wr.min + 1)) + Math.floor(effAttStr * 0.5);
+    if (isP) dmg = Math.max(1, Math.floor(dmg * getFatigueLevel().dmgMult));
+    if (isP && skillState && skillState.pFx.rush) dmg = Math.floor(dmg * 1.5);
+    if (isP && skillState && skillState.pFx.series) dmg = Math.floor(dmg * 1.3);
+    if (isP && eb.dmgBonus) dmg += eb.dmgBonus;
+  }
+  if (skillState && !isP && skillState.pFx.wall) {
+    addLog("🛡️ <span class='heal'>Железная стена! Урон поглощён!</span>", "heal");
+    skillState.pFx.wall = false;
+    if (skillState.build === "tank") addCharge("player", 1);
+    return;
+  }
+  if (skillState && isP && skillState.eFx.wall) {
+    addLog("<span class='dmg'>🤖 Бот: Железная стена! Урон поглощён!</span>");
+    skillState.eFx.wall = false;
+    if (skillState.eBuild === "tank") addCharge("enemy", 1);
+    return;
+  }
+  var pierceActive = false;
+  if (skillState && isP && skillState.pFx.pierce) { pierceActive = true; skillState.pFx.pierce = false; }
+  if (skillState && !isP && skillState.eFx.pierce) { pierceActive = true; skillState.eFx.pierce = false; }
+  if (isP && eb.armorPierce > 0 && Math.random() * 100 < eb.armorPierce) {
+    pierceActive = true;
+    addLog("<span class='pierce-log'>🗡️ Пробитие брони сработало!</span>", "sys");
+  }
+  var attCrit = Math.min(55, effAttIntu * 0.4 + Math.floor((isP ? eb.crit : 0) / 10));
+  var defAntiCrit = Math.min(40, effDefEnd * 0.3 + Math.floor((isP ? 0 : db.antiCrit) / 10));
+  var effCrit = Math.max(0, attCrit - defAntiCrit);
+  var crit = false;
+  if (skillState && isP && skillState.pFx.gCrit) { crit = true; skillState.pFx.gCrit = false; }
+  else if (skillState && !isP && skillState.eFx.gCrit) { crit = true; skillState.eFx.gCrit = false; }
+  else crit = Math.random() * 100 < effCrit;
+  if (!pierceActive && blocks.indexOf(zone) >= 0) {
+    if (crit) {
+      var halfDmg = Math.max(1, Math.floor(dmg * 0.5));
+      var critMult = Math.min(3.0, 1.5 + effAttIntu * 0.02 + (isP ? eb.critDmg : 0));
+      var finalDmg = Math.floor(halfDmg * critMult);
+      addLog("<div class='crit-log'>💥 " + fighterName(att) + " — <b>КРИТ</b> «" + zone + "»: <span class='pierce-log'>пробивает блок</span>, <span class='dmg'>" + finalDmg + "</span> урона!</div>");
+      dmg = finalDmg;
+      var tc1 = isP ? document.getElementById("eSide") : document.getElementById("pSide");
+      var ag1 = document.querySelector(".battle-grid");
+      tc1.classList.add("crit-flash"); ag1.classList.add("shake");
+      setTimeout(function() { tc1.classList.remove("crit-flash"); ag1.classList.remove("shake"); }, 500);
+      if (isP && skillState && skillState.build === "crit") addCharge("player", 1);
+      if (!isP && skillState && skillState.eBuild === "crit") addCharge("enemy", 1);
+      if (isP) player.dailyProgress.crits = (player.dailyProgress.crits || 0) + 1;
+    } else {
+      var blockPct = Math.min(50, effDefEnd * 0.5 + Math.floor((isP ? 0 : db.block) / 3));
+      dmg = Math.max(1, Math.floor(dmg * (1 - blockPct / 100)));
+      addLog(fighterName(att) + " → «" + zone + "»: <span class='heal'>блок</span>, <span class='dmg'>" + dmg + "</span> урона.");
+      if (!isP) {
+        player.dailyProgress.blocks = (player.dailyProgress.blocks || 0) + 1;
+        if (skillState && skillState.build === "tank") addCharge("player", 1);
+      } else {
+        if (skillState && skillState.eBuild === "tank") addCharge("enemy", 1);
+      }
+    }
+  } else {
+    if (pierceActive) addLog("🗡️ <span class='epic'>Пронзание! Блок игнорируется!</span>", "sys");
+    if (crit) {
+      var critMult2 = Math.min(3.0, 1.5 + effAttIntu * 0.02 + (isP ? eb.critDmg : 0));
+      dmg = Math.floor(dmg * critMult2);
+      var tc = isP ? document.getElementById("eSide") : document.getElementById("pSide");
+      var ag = document.querySelector(".battle-grid");
+      tc.classList.add("crit-flash"); ag.classList.add("shake");
+      setTimeout(function() { tc.classList.remove("crit-flash"); ag.classList.remove("shake"); }, 500);
+      addLog("<div class='crit-log'>💥 " + fighterName(att) + " — <b>КРИТ</b> «" + zone + "»: <span class='dmg'>" + dmg + "</span> урона!</div>");
+      if (isP && skillState && skillState.build === "crit") addCharge("player", 1);
+      if (!isP && skillState && skillState.eBuild === "crit") addCharge("enemy", 1);
+      if (isP) player.dailyProgress.crits = (player.dailyProgress.crits || 0) + 1;
+    } else {
+      addLog(fighterName(att) + " → «" + zone + "»: <span class='dmg'>" + dmg + "</span> урона.");
+    }
+  }
+    if (isP && skillState) addCharge("player", 1);
+  if (!isP && skillState) addCharge("enemy", 1);
+
+  if (isP) {
+    if (Math.random() < WEAPON_WEAR_CHANCE) {
+      wearSlot("weapon");
+      recalcMaxHp();
+    }
+  } else {
+    if (Math.random() < ARMOR_WEAR_CHANCE) {
+      var armorSlots = SLOTS.filter(function(s) { return s !== "weapon" && s !== "shield" && player.equipment[s]; });
+      if (armorSlots.length > 0) {
+        var randomSlot = armorSlots[Math.floor(Math.random() * armorSlots.length)];
+        wearSlot(randomSlot);
+        recalcMaxHp();
+      }
+    }
+    if (blocks.indexOf(zone) >= 0 && hasShield() && Math.random() < SHIELD_WEAR_CHANCE) {
+      wearSlot("shield");
+      recalcMaxHp();
+    }
+  }
+
+  /* ПАРИРОВАНИЕ защитника (шанс снизить урон на 50%) */
+  var parryChance = isP ? (db.parry || 0) : (player.equipment ? getEquipBonus().parry : 0);
+  if (parryChance > 0 && Math.random() * 100 < parryChance) {
+    dmg = Math.max(1, Math.floor(dmg * 0.5));
+    addLog("<span class='heal'>🛡 " + fighterName(def) + " парирует! Урон снижен вдвое.</span>", "sys");
+  }
+
+  /* СНИЖЕНИЕ УРОНА от брони защитника */
+  var defenderBonus = isP ? null : getEquipBonus();
+  if (defenderBonus) {
+    if (defenderBonus.dmgReduction > 0) dmg = Math.max(1, dmg - defenderBonus.dmgReduction);
+    var za = (defenderBonus.zoneArmor && defenderBonus.zoneArmor[zone]) || 0;
+    if (za > 0) dmg = Math.max(1, dmg - za);
+  }
+
+    /* Штраф за пропуск хода */
+  if (combatState && combatState.punishNextHit && combatState.punishNextHit !== 1) {
+    dmg = Math.floor(dmg * combatState.punishNextHit);
+    addLog("<span class='dmg'>⚡ Штраф за пропуск хода: +20% урона!</span>", "sys");
+    combatState.punishNextHit = 1;
+  }
+
+  def.hp -= dmg;
+  if (blocks.indexOf(zone) < 0) combatState.dodgeBoost = 0;
+}
+
+function victory() {
+  pushHistory("win");
+  battleRecording = false;
+  var duelPrefix = isDuel ? "<span class='duel-log'>⚔ ДУЭЛЬ: </span>" : "";
+  addLog(duelPrefix + "<span class='heal'>" + fighterName(enemy) + " повержен!</span>");
+  player.wins++;
+  player.dailyProgress.kills = (player.dailyProgress.kills || 0) + 1;
+  player.dailyProgress.streak = (player.dailyProgress.streak || 0) + 1;
+  if (!isDuel && enemy && enemy.location) {
+  player.questProgress.locationKills[enemy.location] = (player.questProgress.locationKills[enemy.location] || 0) + 1;
+  }
+  if (isDuel) {
+    player.dailyProgress.duelWins = (player.dailyProgress.duelWins || 0) + 1;
+    player.pvpWins = (player.pvpWins || 0) + 1;
+    var ratingDelta = (enemy && enemy.isHigherLevel) ? PVP_RATING_WIN_HIGHER : PVP_RATING_WIN_EQUAL;
+    player.pvpRating = (player.pvpRating || 0) + ratingDelta;
+    player.pvpLastFight = Date.now();
+    addLog("<span class='epic'>🏆 PvP: победа! Рейтинг +" + ratingDelta + " (всего: " + player.pvpRating + ")</span>", "heal");
+  }
+  var dropLocations = ["forest", "caves", "graveyard"];
+  if (!isDuel && enemy && enemy.location && dropLocations.indexOf(enemy.location) >= 0) {
+    if (enemy.isElite) {
+      player.materials.t1++;
+      addLog("<span class='rare'>🟫 Элита: гарантированный грубый материал! (всего: " + player.materials.t1 + ")</span>", "heal");
+      if (locationAllowsT2(enemy.location) && Math.random() < ELITE_T2_CHANCE) {
+        player.materials.t2++;
+        addLog("<span class='rare'>🔷 Элита: редкий материал! (всего: " + player.materials.t2 + ")</span>", "heal");
+      }
+    } else {
+      if (Math.random() < T1_DROP_CHANCE) {
+        player.materials.t1++;
+        addLog("<span class='heal'>🟫 Найден грубый материал! (всего: " + player.materials.t1 + ")</span>", "sys");
+      }
+      if (locationAllowsT2(enemy.location) && Math.random() < T2_DROP_CHANCE) {
+        player.materials.t2++;
+        addLog("<span class='heal'>🔷 Найден редкий материал! (всего: " + player.materials.t2 + ")</span>", "sys");
+      }
+    }
+  }
+  player.fatigue = Math.min(FATIGUE_MAX, player.fatigue + FATIGUE_PER_FIGHT);
+  player.lastFatigueTick = Date.now();
+    var gold = getBattleGold();
+  if (isDuel) gold = Math.floor(gold * PVP_REWARD_MULT);
+  if (enemy && enemy.isElite) gold = Math.floor(gold * ELITE_GOLD_MULT);
+  var fl = getFatigueLevel();
+  gold = Math.max(1, Math.floor(gold * fl.goldMult));
+  player.money += gold;
+  
+  /* === НАГРАДА ЗА БОССА === */
+  if (enemy && enemy.isBoss) {
+    var bossCfg = getBossConfig(enemy.location);
+    if (bossCfg) {
+      if (!player.bossCooldowns) player.bossCooldowns = {};
+      player.bossCooldowns[enemy.location] = Date.now() + bossCfg.cooldownMs;
+      player.money += bossCfg.rewardMoney;
+      addLog("<span class='legendary'>👑 " + bossCfg.name + " повержен! +" + bossCfg.rewardMoney + " монет.</span>", "heal");
+      if (Math.random() < bossCfg.t3DropChance) {
+        player.materials.t3++;
+        addLog("<span class='legendary'>💎 Выпал легендарный остаток! (всего: " + player.materials.t3 + ")</span>", "heal");
+      } else {
+        addLog("<span class='sys'>" + bossCfg.name + " не оставил легендарных остатков...</span>", "sys");
+      }
+      addLog("<span class='sys'>Следующий вызов через 4 часа.</span>", "sys");
+    }
+  }
+  if (!isDuel && Math.random() < (enemy && enemy.isElite ? ELITE_ITEM_DROP : 0.05)) {
+    var loc = LOCATIONS.find(function(l) { return l.id === currentLocation; }) || LOCATIONS[0];
+    var locMinLevel = (loc.minLevel || 0) + 1;
+    var targetLevel = Math.min(player.level, 5);
+    var dropLevel = Math.max(locMinLevel, targetLevel - 1 + Math.floor(Math.random() * 2));
+    var DROP_CATEGORIES = [
+      { name: "weapon", weight: 3, filter: function(x) { return x.slot === "weapon"; } },
+      { name: "armor",  weight: 2, filter: function(x) { return ["head","chest","belt","legs","greaves","shield","wrists","bracers"].indexOf(x.slot) >= 0; } },
+      { name: "jewel",  weight: 1, filter: function(x) { return ["earring","amulet","ring1"].indexOf(x.slot) >= 0; } }
+    ];
+    var totalWeight = 0;
+    DROP_CATEGORIES.forEach(function(c) { totalWeight += c.weight; });
+    var r = Math.random() * totalWeight;
+    var chosen = null;
+    for (var i = 0; i < DROP_CATEGORIES.length; i++) {
+      r -= DROP_CATEGORIES[i].weight;
+      if (r <= 0) { chosen = DROP_CATEGORIES[i]; break; }
+    }
+    if (chosen) {
+      var pool = SHOP_TABLE.filter(function(x) {
+        return chosen.filter(x) && x.minLvl === dropLevel;
+      });
+      if (pool.length > 0) {
+        var drop = pool[Math.floor(Math.random() * pool.length)];
+        var dropInst = makeItemInstance(drop.id);
+        if (dropInst) {
+          player.inventory.push(dropInst);
+          addLog("<span class='rare'>🎁 Добыча: " + drop.name + "!</span>", "heal");
+        }
+      }
+    }
+  }
+  if (player.level < MAX_LEVEL) {
+    var gain = getXpForBot(player.level);
+    if (isDuel) gain = Math.floor(gain * PVP_REWARD_MULT);
+    if (enemy && enemy.isElite) gain = Math.floor(gain * ELITE_XP_MULT);
+    gain = Math.floor(gain * fl.expMult);
+    player.exp += gain;
+    addLog("+" + gain + " xp, +" + gold + " монет" + (fl.expMult < 1 ? " " + fl.emoji + " (" + fl.name + ")" : "") + (isDuel ? " <span class='duel-log'>(PvP ×" + PVP_REWARD_MULT + ")</span>" : "") + ".", "heal");
+    checkProgress();
+  } else addLog("+" + gold + " монет. <span class='max-level'>(MAX)</span>", "heal");
+  enemy = null; isDuel = false; skillState = null; combatState = { dodgeBoost: 0 };
+  player.lastHpRegen = Date.now();
+  renderBattleScreen(); save(); renderHome();
+}
+function defeat() {
+  pushHistory("loss");
+  battleRecording = false;
+  addLog("<span class='dmg'>Ты пал в бою...</span>");
+  player.losses++;
+  player.dailyProgress.streak = 0;
+  player.hp = Math.max(1, Math.floor(player.maxHp * 0.3));
+
+  if (isDuel) {
+    player.pvpLosses = (player.pvpLosses || 0) + 1;
+    player.pvpRating = Math.max(0, (player.pvpRating || 0) + PVP_RATING_LOSS);
+    player.pvpLastFight = Date.now();
+    addLog("<span class='epic'>🏆 PvP: поражение. Рейтинг " + PVP_RATING_LOSS + " (всего: " + player.pvpRating + ")</span>", "sys");
+  }
+
+  enemy = null; isDuel = false; skillState = null; combatState = { dodgeBoost: 0 };
+  player.lastHpRegen = Date.now();
+  renderBattleScreen(); save(); renderHome();
+}
+
+function addLog(html, cls) {
+  var d = new Date();
+  var ts = "<span class='log-time'>[" + two(d.getHours()) + ":" + two(d.getMinutes()) + ":" + two(d.getSeconds()) + "]</span>";
+  html = ts + " " + html;
+  if (battleRecording) battleEvents.push(html);
+  var log = document.getElementById("log");
+  var div = document.createElement("div");
+  if (cls) div.className = cls;
+  div.innerHTML = html;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+var FAKE_PVP_LEADERS = [
+  { name: "Хальдор Железнобокий", level: 13, pvpWins: 842, pvpLosses: 156, pvpRating: 4230 },
+  { name: "Элара Клинковая", level: 12, pvpWins: 715, pvpLosses: 189, pvpRating: 3810 },
+  { name: "Мороз Беспощадный", level: 12, pvpWins: 634, pvpLosses: 210, pvpRating: 3540 },
+  { name: "Валькирия Шторм", level: 11, pvpWins: 521, pvpLosses: 187, pvpRating: 3120 },
+  { name: "Торн Кровавый", level: 10, pvpWins: 448, pvpLosses: 165, pvpRating: 2780 },
+  { name: "Лира Теневая", level: 9, pvpWins: 362, pvpLosses: 142, pvpRating: 2410 },
+  { name: "Гром Камнерукий", level: 8, pvpWins: 287, pvpLosses: 118, pvpRating: 2050 },
+  { name: "Сайрус Молниеносный", level: 7, pvpWins: 214, pvpLosses: 96, pvpRating: 1720 },
+  { name: "Нара Ядовитая", level: 6, pvpWins: 156, pvpLosses: 74, pvpRating: 1340 },
+  { name: "Клинок_Ночи", level: 5, pvpWins: 98, pvpLosses: 61, pvpRating: 980 },
+  { name: "Серый_Волк", level: 4, pvpWins: 62, pvpLosses: 40, pvpRating: 640 },
+  { name: "Молодой_Лев", level: 3, pvpWins: 31, pvpLosses: 22, pvpRating: 380 }
+];
+
+
+function renderLeaderboard() {
+  var all = FAKE_PVP_LEADERS.slice();
+  all.push({
+    name: player.name,
+    level: player.level,
+    pvpWins: player.pvpWins || 0,
+    pvpLosses: player.pvpLosses || 0,
+    pvpRating: player.pvpRating || 0,
+    isMe: true
+  });
+
+  // Сортировка: сначала по рейтингу, потом по победам
+  all.sort(function(a, b) {
+    if (b.pvpRating !== a.pvpRating) return b.pvpRating - a.pvpRating;
+    return b.pvpWins - a.pvpWins;
+  });
+
+  var html = "";
+  all.slice(0, 15).forEach(function(p, i) {
+    var rank = i + 1;
+    var medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+    var total = p.pvpWins + p.pvpLosses;
+    var wr = total > 0 ? Math.round(p.pvpWins / total * 100) : 0;
+    html += "<div class='leaderboard-row" + (p.isMe ? " me" : "") + "'>" +
+      "<div>" +
+        "<span class='leaderboard-rank'>" + medal + "</span> " +
+        "<b>" + esc(p.name) + "</b>" +
+        "<div class='lb-pvp-sub'>Ур. " + p.level + " · " + wr + "% побед</div>" +
+      "</div>" +
+      "<div style='text-align:right;'>" +
+        "<div class='lb-rating'>⚔ " + p.pvpRating.toLocaleString() + "</div>" +
+        "<div class='lb-pvp-sub'>" + p.pvpWins + " / " + p.pvpLosses + "</div>" +
+      "</div>" +
+    "</div>";
+  });
+  document.getElementById("leaderboardList").innerHTML = html;
+}
+/* === ОНЛАЙН-СПИСОК === */
+var ONLINE_STORAGE_KEY = "arena_online";
+var ONLINE_SIZE = 45;
+var ONLINE_REGEN_INTERVAL = 30 * 60 * 1000;
+
+var ONLINE_PREFIXES = [
+  "Тень", "Волк", "Клинок", "Гром", "Сталь", "Лед", "Огонь", "Ворон",
+  "Сокол", "Медведь", "Тигр", "Змей", "Барон", "Рыцарь", "Лорд", "Мастер",
+  "Стрелок", "Охотник", "Странник", "Паладин", "Ветеран", "Мститель", "Безумец"
+];
+var ONLINE_SUFFIXES = [
+  "Арены", "Тени", "Света", "Ночи", "Дня", "Севера", "Юга", "Востока", "Запада",
+  "Крови", "Клинка", "Щита", "Лука", "Топора", "Копья", "Судьбы", "Смерти",
+  "Вечности", "Тумана", "Пепла", "_xX", "_Pro", "_Und", "_666", "999"
+];
+var ONLINE_NUMERIC = ["77", "88", "99", "01", "02", "007", "777", "123", "2024", "13"];
+
+var ONLINE_ARCH_ICONS = {
+  fighter: "SWORD",
+  tank: "SHIELD",
+  dodger: "WIND",
+  crit: "SKULL"
+};
+
+function pickOnlineName() {
+  var roll = Math.random();
+  if (roll < 0.55) {
+    return ONLINE_PREFIXES[Math.floor(Math.random() * ONLINE_PREFIXES.length)] +
+           "_" +
+           ONLINE_SUFFIXES[Math.floor(Math.random() * ONLINE_SUFFIXES.length)];
+  } else if (roll < 0.85) {
+    return ONLINE_PREFIXES[Math.floor(Math.random() * ONLINE_PREFIXES.length)] +
+           ONLINE_NUMERIC[Math.floor(Math.random() * ONLINE_NUMERIC.length)];
+  } else {
+    return ONLINE_PREFIXES[Math.floor(Math.random() * ONLINE_PREFIXES.length)] +
+           "_" +
+           ONLINE_SUFFIXES[Math.floor(Math.random() * ONLINE_SUFFIXES.length)] +
+           ONLINE_NUMERIC[Math.floor(Math.random() * ONLINE_NUMERIC.length)];
+  }
+}
+
+function generateOnlineList() {
+  var list = [];
+  var pLevel = player ? player.level : 1;
+  var usedNames = {};
+
+  /* Игрок первым */
+  if (player) {
+    list.push({
+      name: player.name,
+      level: player.level,
+      arch: getPlayerBuild(),
+      gender: player.gender,
+      isMe: true
+    });
+  }
+
+  var archKeys = ["fighter", "tank", "dodger", "crit"];
+  for (var i = 1; i < ONLINE_SIZE; i++) {
+    var lvl;
+    var roll = Math.random();
+    if (roll < 0.35) lvl = Math.max(1, pLevel - 2 + Math.floor(Math.random() * 3));
+    else if (roll < 0.70) lvl = pLevel + Math.floor(Math.random() * 3);
+    else if (roll < 0.90) lvl = Math.max(1, pLevel - 4 + Math.floor(Math.random() * 3));
+    else lvl = Math.min(MAX_LEVEL, pLevel + 2 + Math.floor(Math.random() * 5));
+
+    var name;
+    var guard = 0;
+    do {
+      name = pickOnlineName();
+      guard++;
+    } while (usedNames[name] && guard < 20);
+    usedNames[name] = true;
+
+    list.push({
+      name: name,
+      level: lvl,
+      arch: archKeys[Math.floor(Math.random() * archKeys.length)],
+      gender: Math.random() < 0.75 ? "М" : "Ж",
+      isMe: false
+    });
+  }
+
+  /* Сортировка по уровню (по убыванию) */
+  list.sort(function(a, b) {
+    if (b.level !== a.level) return b.level - a.level;
+    return a.name.localeCompare(b.name);
+  });
+
+  return list;
+}
+
+function saveOnlineList(list) {
+  try {
+    localStorage.setItem(ONLINE_STORAGE_KEY, JSON.stringify({
+      ts: Date.now(),
+      list: list
+    }));
+  } catch (e) {}
+}
+
+function loadOnlineList() {
+  try {
+    var raw = localStorage.getItem(ONLINE_STORAGE_KEY);
+    if (!raw) return null;
+    var data = JSON.parse(raw);
+    if (!data || !data.list || !data.ts) return null;
+    return data;
+  } catch (e) { return null; }
+}
+
+function regenerateOnline() {
+  var list = generateOnlineList();
+  saveOnlineList(list);
+  renderOnline();
+}
+
+function renderOnline() {
+  var container = document.getElementById("onlineList");
+  var countEl = document.getElementById("onlineCount");
+  if (!container) return;
+
+  var data = loadOnlineList();
+  if (!data || (Date.now() - data.ts > ONLINE_REGEN_INTERVAL)) {
+    var freshList = generateOnlineList();
+    saveOnlineList(freshList);
+    data = { ts: Date.now(), list: freshList };
+  }
+
+  var list = data.list || [];
+
+  /* Обновляем имя/уровень игрока, если он изменился */
+  list = list.map(function(p) {
+    if (p.isMe && player) {
+      return {
+        name: player.name,
+        level: player.level,
+        arch: getPlayerBuild(),
+        gender: player.gender,
+        isMe: true
+      };
+    }
+    return p;
+  });
+
+  list.sort(function(a, b) {
+    if (b.level !== a.level) return b.level - a.level;
+    return a.name.localeCompare(b.name);
+  });
+
+  if (countEl) countEl.textContent = list.length;
+
+  if (list.length === 0) {
+    container.innerHTML = "<div class='online-empty'>Никого нет онлайн</div>";
+    return;
+  }
+
+  var archIcons = {
+    fighter: "⚔",
+    tank: "🛡",
+    dodger: "💨",
+    crit: "💀"
+  };
+
+  var html = "";
+  list.forEach(function(p, i) {
+    var icon = archIcons[p.arch] || "?";
+    var gIcon = p.gender === "Ж" ? "♀" : "♂";
+    html += "<div class='online-row" + (p.isMe ? " me" : "") + "'>" +
+      "<span class='online-rank'>[" + (i + 1) + "]</span>" +
+      "<span class='online-arch'>" + icon + "</span>" +
+      "<span class='online-name'>" + esc(p.name) + "</span>" +
+      "<span class='online-lvl'>[" + p.level + "]</span>" +
+      "<span class='online-gender'>" + gIcon + "</span>" +
+      "</div>";
+  });
+  container.innerHTML = html;
+}
+/* === ЧАТ === */
+var CHAT_STORAGE_KEY = "arena_chat";
+var CHAT_MAX_MESSAGES = 200;
+var CHAT_ACTIVE_TAB = "general";
+var CHAT_OPEN = false;
+var CHAT_FAKE_TIMER = null;
+
+var CHAT_NPC_NAMES = ["Гром", "Лира", "Тень_Арены", "Мечник77", "Странник", "Капитан_Стражи", "Пилигрим", "Охотник"];
+
+var CHAT_GENERAL_PHRASES = [
+  "Кто сегодня в замок? Нужен напарник",
+  "Продам секиру +3, недорого",
+  "Как апнуть 5 уровень быстро?",
+  "Король сегодня лёг с 4-го раза...",
+  "У кого есть свиток заточки +3?",
+  "На арене сегодня мясо",
+  "В пещерах хороший дроп",
+  "Кто-нибудь видел Директора?",
+  "Заточка +4 вообще возможна?",
+  "Собрал полный сет, иду в замок"
+];
+
+var CHAT_PM_PHRASES = [
+  "Привет! Не хочешь помочь с боссом?",
+  "Скинь скрин своей экипировки",
+  "У тебя есть лишний T3?",
+  "Давай в дуэль?",
+  "Какой у тебя билд?",
+  "Помоги с квестом в лесу, плз"
+];
+
+var CHAT_SYSTEM_PHRASES = [
+  "🎉 Игрок {name} достиг 10-го уровня!",
+  "⚔ Игрок {name} победил Короля Замка!",
+  "💎 Игрок {name} нашёл легендарный остаток!",
+  "🏆 Игрок {name} возглавил таблицу лидеров!",
+  "🔥 Игрок {name} заточил оружие до +5!"
+];
+
+function chatLoad() {
+  try {
+    var raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return [];
+    var data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (e) { return []; }
+}
+
+function chatSave(msgs) {
+  try {
+    if (msgs.length > CHAT_MAX_MESSAGES) {
+      msgs = msgs.slice(-CHAT_MAX_MESSAGES);
+    }
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+  } catch (e) {}
+}
+
+function chatAdd(channel, from, text, opts) {
+  opts = opts || {};
+  var msgs = chatLoad();
+  var msg = {
+    id: Date.now() + Math.random(),
+    channel: channel,
+    from: from,
+    to: opts.to || null,
+    text: text,
+    ts: Date.now(),
+    read: CHAT_OPEN && CHAT_ACTIVE_TAB === channel
+  };
+  msgs.push(msg);
+  chatSave(msgs);
+  if (CHAT_OPEN) chatRenderMessages();
+  chatRenderMinibar();
+  chatRenderTabs();
+}
+
+function chatRenderMinibar() {
+  var msgs = chatLoad();
+  var badge = document.getElementById("chatMinibarBadge");
+  var preview = document.getElementById("chatMinibarPreview");
+  if (!badge || !preview) return;
+
+  var unread = msgs.filter(function(m) { return !m.read; }).length;
+  if (unread > 0) {
+    badge.textContent = unread > 99 ? "99+" : unread;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+
+  if (msgs.length === 0) {
+    preview.textContent = "Чат — нажми, чтобы открыть";
+    return;
+  }
+  var last = msgs[msgs.length - 1];
+  var author = last.from === player.name ? "Ты" : esc(last.from);
+  preview.innerHTML = "<span class='chat-author'>" + author + ":</span> " + esc(last.text);
+}
+
+function chatRenderTabs() {
+  var box = document.getElementById("chatTabs");
+  if (!box) return;
+  var msgs = chatLoad();
+  var tabs = [
+    { id: "general", label: "Общий" },
+    { id: "system", label: "Система" },
+    { id: "pm", label: "Личные" }
+  ];
+  var html = "";
+  tabs.forEach(function(t) {
+    var unread = msgs.filter(function(m) { return m.channel === t.id && !m.read; }).length;
+    var active = CHAT_ACTIVE_TAB === t.id;
+    html += "<div class='chat-tab" + (active ? " active" : "") + "' onclick='switchChatTab(\"" + t.id + "\")'>" +
+      t.label +
+      (unread > 0 ? " <span class='chat-badge'>" + unread + "</span>" : "") +
+      "</div>";
+  });
+  box.innerHTML = html;
+}
+
+function chatRenderMessages() {
+  var box = document.getElementById("chatMessages");
+  if (!box) return;
+  var msgs = chatLoad();
+  var filtered = msgs.filter(function(m) {
+    if (CHAT_ACTIVE_TAB === "pm") return m.channel === "pm";
+    return m.channel === CHAT_ACTIVE_TAB;
+  });
+
+  if (filtered.length === 0) {
+    box.innerHTML = "<div class='chat-empty'>Пока пусто</div>";
+    return;
+  }
+
+  var html = "";
+  filtered.forEach(function(m) {
+    var time = new Date(m.ts);
+    var hh = time.getHours(), mm = time.getMinutes();
+    var tstr = (hh < 10 ? "0" + hh : hh) + ":" + (mm < 10 ? "0" + mm : mm);
+    var isMe = m.from === player.name;
+    var cls = "chat-message";
+    if (m.channel === "system") cls += " system";
+    if (m.channel === "pm") cls += " pm";
+    var author = isMe ? "Ты" : esc(m.from);
+    var prefix = (m.channel === "pm" && m.to) ? ("→ " + esc(m.to) + ": ") : "";
+    html += "<div class='" + cls + "'>" +
+      "<span class='cm-author" + (isMe ? " me" : "") + "'>" + author + "</span>" +
+      "<span class='cm-time'>" + tstr + "</span> " +
+      "<span class='cm-text'>" + prefix + esc(m.text) + "</span>" +
+      "</div>";
+  });
+  box.innerHTML = html;
+  box.scrollTop = box.scrollHeight;
+}
+
+function switchChatTab(tab) {
+  CHAT_ACTIVE_TAB = tab;
+  // помечаем как прочитанные
+  var msgs = chatLoad();
+  var changed = false;
+  msgs.forEach(function(m) {
+    if (m.channel === tab && !m.read) { m.read = true; changed = true; }
+  });
+  if (changed) chatSave(msgs);
+
+  // показать/скрыть select получателя в ЛС
+  var sel = document.getElementById("chatPmSelect");
+  if (sel) {
+    if (tab === "pm") {
+      sel.classList.remove("hidden");
+      if (sel.options.length === 0) {
+        CHAT_NPC_NAMES.forEach(function(n) {
+          var opt = document.createElement("option");
+          opt.value = n;
+          opt.textContent = "→ " + n;
+          sel.appendChild(opt);
+        });
+      }
+    } else {
+      sel.classList.add("hidden");
+    }
+  }
+
+  chatRenderTabs();
+  chatRenderMessages();
+  chatRenderMinibar();
+}
+
+function openChat() {
+  CHAT_OPEN = true;
+  document.getElementById("chatOverlay").classList.remove("hidden");
+  // помечаем текущий канал как прочитанный
+  switchChatTab(CHAT_ACTIVE_TAB);
+  setTimeout(function() {
+    var input = document.getElementById("chatInput");
+    if (input) input.focus();
+  }, 50);
+}
+
+function closeChat(e) {
+  if (e && e.target !== document.getElementById("chatOverlay")) return;
+  closeChatForce();
+}
+
+function closeChatForce() {
+  CHAT_OPEN = false;
+  document.getElementById("chatOverlay").classList.add("hidden");
+}
+
+function sendChatMessage() {
+  var input = document.getElementById("chatInput");
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) return;
+
+  if (CHAT_ACTIVE_TAB === "pm") {
+    var sel = document.getElementById("chatPmSelect");
+    var to = sel && sel.value ? sel.value : CHAT_NPC_NAMES[0];
+    chatAdd("pm", player.name, text, { to: to });
+    // имитация ответа через 3-6 сек
+    setTimeout(function() {
+      chatAdd("pm", to, CHAT_PM_PHRASES[Math.floor(Math.random() * CHAT_PM_PHRASES.length)]);
+    }, 3000 + Math.random() * 3000);
+  } else if (CHAT_ACTIVE_TAB === "general") {
+    chatAdd("general", player.name, text);
+  } else {
+    // в системном канале писать нельзя
+    return;
+  }
+
+  input.value = "";
+  input.focus();
+}
+
+function startFakeChat() {
+  if (CHAT_FAKE_TIMER) clearInterval(CHAT_FAKE_TIMER);
+  function scheduleNext() {
+    var delay = 30000 + Math.random() * 30000; // 30-60 сек
+    CHAT_FAKE_TIMER = setTimeout(function() {
+      var roll = Math.random();
+      if (roll < 0.75) {
+        // общий чат
+        var name = CHAT_NPC_NAMES[Math.floor(Math.random() * CHAT_NPC_NAMES.length)];
+        var phrase = CHAT_GENERAL_PHRASES[Math.floor(Math.random() * CHAT_GENERAL_PHRASES.length)];
+        chatAdd("general", name, phrase);
+      } else if (roll < 0.92) {
+        // системное событие
+        var pname = CHAT_NPC_NAMES[Math.floor(Math.random() * CHAT_NPC_NAMES.length)];
+        var phrase2 = CHAT_SYSTEM_PHRASES[Math.floor(Math.random() * CHAT_SYSTEM_PHRASES.length)];
+        chatAdd("system", "Система", phrase2.replace("{name}", pname));
+      } else {
+        // личное сообщение игроку
+        var npc = CHAT_NPC_NAMES[Math.floor(Math.random() * CHAT_NPC_NAMES.length)];
+        var phrase3 = CHAT_PM_PHRASES[Math.floor(Math.random() * CHAT_PM_PHRASES.length)];
+        chatAdd("pm", npc, phrase3, { to: player.name });
+      }
+      scheduleNext();
+    }, delay);
+  }
+  scheduleNext();
+}
+
+/* Горячие клавиши */
+document.addEventListener("keydown", function(e) {
+  var tag = (e.target.tagName || "").toLowerCase();
+  var isInput = (tag === "input" || tag === "textarea" || tag === "select");
+
+  // T — открыть чат (если не в поле ввода)
+  if (!isInput && (e.key === "t" || e.key === "T" || e.key === "е" || e.key === "Е")) {
+    e.preventDefault();
+    if (!CHAT_OPEN) openChat();
+    return;
+  }
+
+  // Esc — закрыть чат
+  if (e.key === "Escape" && CHAT_OPEN) {
+    closeChatForce();
+    return;
+  }
+
+  // Enter в поле чата — отправить
+  if (e.key === "Enter" && e.target.id === "chatInput" && CHAT_OPEN) {
+    e.preventDefault();
+    sendChatMessage();
+    return;
+  }
+});
+
+(function init() {
+  try {
+    var saved = loadSave();
+    if (saved && saved.name) {
+      player = saved;
+      ensureFields();
+      isDuel = false; skillState = null; combatState = { dodgeBoost: 0 };
+      battleRecording = false; battleEvents = []; battleRounds = 0;
+      renderBattleScreen(); renderHome();
+    } else {
+      openCreateModal();
+    }
+    // инициализация чата
+    if (player) {
+      chatRenderMinibar();
+      startFakeChat();
+    }
+  } catch (e) {
+    alert("⚠ Ошибка при запуске игры:\n" + e.message + "\n\nПопробуй создать нового персонажа.");
+  }
+})();
+</script>
+<div id="chatMinibar" class="chat-minibar" onclick="openChat()">
+  <span class="chat-icon">💬</span>
+  <span class="chat-preview" id="chatMinibarPreview">Чат — нажми, чтобы открыть</span>
+  <span class="chat-badge hidden" id="chatMinibarBadge">0</span>
+  <span class="chat-hint">T</span>
+</div>
+<div id="pvpSearchOverlay" class="pvp-search-overlay hidden" onclick="cancelPvpSearch(event)">
+  <div class="pvp-search-box" onclick="event.stopPropagation()">
+    <div class="spinner"></div>
+    <div class="title">⚔ Поиск соперника</div>
+    <div class="status" id="pvpSearchStatus">Сканируем арену...</div>
+    <button class="cancel-btn" onclick="cancelPvpSearchForce()">Отмена</button>
+  </div>
+</div>
+</body>
+</html>
